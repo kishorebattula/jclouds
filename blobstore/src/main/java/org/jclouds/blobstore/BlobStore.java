@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.http.HttpResponse;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobAccess;
 import org.jclouds.blobstore.domain.BlobBuilder;
@@ -323,6 +325,8 @@ public interface BlobStore {
     *            if the container doesn't exist
     */
    void removeBlobs(String container, Iterable<String> names);
+
+   CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception;
 
    @Beta
    BlobAccess getBlobAccess(String container, String name);

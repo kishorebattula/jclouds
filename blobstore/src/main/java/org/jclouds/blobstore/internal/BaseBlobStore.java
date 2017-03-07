@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
@@ -263,6 +264,11 @@ public abstract class BaseBlobStore implements BlobStore {
     */
    protected abstract boolean deleteAndVerifyContainerGone(String container);
 
+   @Override
+   public CompletableFuture<org.apache.http.HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+      System.out.println("ISSUE: USING THE BASE ASYNC!");
+      return null;
+   }
    @Override
    public String copyBlob(String fromContainer, String fromName, String toContainer, String toName,
          CopyOptions options) {

@@ -33,6 +33,7 @@ import org.jclouds.http.HttpResponse;
 import org.jclouds.logging.Logger;
 import org.jclouds.reflect.Invocation;
 import org.jclouds.rest.InvocationContext;
+import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.config.InvocationConfig;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -80,14 +81,18 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
     * if a {@code Throwable} is encountered.
     */
    public Object invoke(Invocation invocation) {
+
       String commandName = config.getCommandName(invocation);
       HttpCommand command = toCommand(commandName, invocation);
       Function<HttpResponse, ?> transformer = getTransformer(commandName, command);
       org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
-
       logger.debug(">> invoking %s", commandName);
       try {
-         return transformer.apply(http.invoke(command));
+         if(invocation.getInvokable().isAnnotationPresent(Async.class)){
+            return http.invokeAsync(command);
+         }else{
+            return transformer.apply(http.invoke(command));
+         }
       } catch (Throwable t) {
          try {
             return fallback.createOrPropagate(t);

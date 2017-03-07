@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -47,6 +48,7 @@ import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.http.HttpResponse;
 import org.jclouds.Constants;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -193,7 +195,11 @@ public class RegionScopedSwiftBlobStore implements BlobStore {
       }
       return api.getContainerApi(regionId).create(container, BASIC_CONTAINER);
    }
-
+   @Override
+   public CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+      System.out.println("ISSUE: USING THE REGION SCOPED BLOBSTORE ASYNC!");
+      return null;
+   }
    @Override
    public ContainerAccess getContainerAccess(String name) {
       Container container = api.getContainerApi(regionId).get(name);

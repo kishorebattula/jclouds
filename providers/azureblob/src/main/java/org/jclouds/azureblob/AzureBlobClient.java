@@ -23,6 +23,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.CompletableFuture;
 import javax.inject.Named;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -32,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
+import org.apache.http.HttpResponse;
 import org.jclouds.Fallbacks.TrueOnNotFoundOr404;
 import org.jclouds.Fallbacks.VoidOnNotFoundOr404;
 import org.jclouds.azure.storage.domain.BoundedSet;
@@ -73,6 +75,7 @@ import org.jclouds.http.functions.ParseETagHeader;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.ContentMetadata;
 import org.jclouds.io.Payload;
+import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.annotations.BinderParam;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Headers;
@@ -334,6 +337,16 @@ public interface AzureBlobClient extends Closeable {
    String putBlob(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
          AzureBlob object);
+
+   @Named("PutBlob")
+   @Async
+   @PUT
+   @Path("{container}/{name}")
+   @Headers(keys = EXPECT, values = "100-continue")
+   @ResponseParser(ParseETagHeader.class)
+   CompletableFuture<HttpResponse> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+       @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
+           AzureBlob object);
 
 
    /**

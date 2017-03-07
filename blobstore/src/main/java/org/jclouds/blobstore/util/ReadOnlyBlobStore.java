@@ -20,8 +20,10 @@ package org.jclouds.blobstore.util;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.http.HttpResponse;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
@@ -84,7 +86,11 @@ public final class ReadOnlyBlobStore extends ForwardingBlobStore {
    public void clearContainer(String container, ListContainerOptions options) {
       throw new UnsupportedOperationException("Read-only BlobStore");
    }
-
+   @Override
+   public CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+      System.out.println("ISSUE: USING THE READ ONLY BLOBSTORE ASYNC!");
+      return null;
+   }
    @Override
    public void deleteContainer(String container) {
       throw new UnsupportedOperationException("Read-only BlobStore");

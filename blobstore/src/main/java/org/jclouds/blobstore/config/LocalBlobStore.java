@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Resource;
@@ -167,6 +168,12 @@ public final class LocalBlobStore implements BlobStore {
    @Override
    public void clearContainer(String containerName) {
       clearContainer(containerName, recursive());
+   }
+
+   @Override
+   public CompletableFuture<org.apache.http.HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+      System.out.println("ISSUE: USING THE LOCAL BLOBSTORE ASYNC!");
+      return null;
    }
 
    @Override

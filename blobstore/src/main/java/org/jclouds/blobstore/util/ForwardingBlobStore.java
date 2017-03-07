@@ -23,10 +23,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.ForwardingObject;
 
+import org.apache.http.HttpResponse;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;
@@ -88,7 +90,11 @@ public abstract class ForwardingBlobStore extends ForwardingObject
          String container) {
       return delegate().createContainerInLocation(location, container);
    }
-
+   @Override
+   public CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+      System.out.println("ISSUE: USING THE FORWARDING BLOBSTORE ASYNC!");
+      return null;
+   }
    @Override
    public boolean createContainerInLocation(Location location,
          String container, CreateContainerOptions createContainerOptions) {
