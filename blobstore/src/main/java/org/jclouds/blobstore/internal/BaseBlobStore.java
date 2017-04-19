@@ -265,8 +265,7 @@ public abstract class BaseBlobStore implements BlobStore {
 
    @Override
    public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
-      System.out.println("ISSUE: USING THE BASE ASYNC!");
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
    @Override
    public String copyBlob(String fromContainer, String fromName, String toContainer, String toName,

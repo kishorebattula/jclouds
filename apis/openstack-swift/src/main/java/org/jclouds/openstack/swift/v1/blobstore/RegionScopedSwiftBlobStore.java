@@ -195,8 +195,7 @@ public class RegionScopedSwiftBlobStore implements BlobStore {
    }
    @Override
    public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
-      System.out.println("ISSUE: USING THE REGION SCOPED BLOBSTORE ASYNC!");
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
    @Override
    public ContainerAccess getContainerAccess(String name) {

@@ -88,8 +88,7 @@ public final class ReadOnlyBlobStore extends ForwardingBlobStore {
    }
    @Override
    public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
-      System.out.println("ISSUE: USING THE READ ONLY BLOBSTORE ASYNC!");
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
    @Override
    public void deleteContainer(String container) {

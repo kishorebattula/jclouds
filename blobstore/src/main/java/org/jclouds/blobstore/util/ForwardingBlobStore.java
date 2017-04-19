@@ -91,8 +91,7 @@ public abstract class ForwardingBlobStore extends ForwardingObject
    }
    @Override
    public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
-      System.out.println("ISSUE: USING THE FORWARDING BLOBSTORE ASYNC!");
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
    @Override
    public boolean createContainerInLocation(Location location,

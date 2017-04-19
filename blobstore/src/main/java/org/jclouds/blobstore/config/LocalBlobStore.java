@@ -172,8 +172,7 @@ public final class LocalBlobStore implements BlobStore {
 
    @Override
    public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
-      System.out.println("ISSUE: USING THE LOCAL BLOBSTORE ASYNC!");
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
 
    @Override

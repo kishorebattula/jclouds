@@ -140,9 +140,9 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
          contentMetadataCodec.fromHeaders(payload.getContentMetadata(), headers);
       }
       return HttpResponse.builder().statusCode(apacheResponse.getStatusLine().getStatusCode())
-                         .message(apacheResponse.getStatusLine().getReasonPhrase())
-                         .payload(payload)
-                         .headers(filterOutContentHeaders(headers)).build();
+                                   .message(apacheResponse.getStatusLine().getReasonPhrase())
+                                   .payload(payload)
+                                   .headers(filterOutContentHeaders(headers)).build();
    }
 
    private org.apache.http.HttpResponse executeRequest(HttpUriRequest nativeRequest) throws IOException,
