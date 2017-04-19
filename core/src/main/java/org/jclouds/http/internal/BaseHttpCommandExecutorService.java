@@ -48,6 +48,9 @@ import org.jclouds.logging.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandExecutorService {
@@ -81,53 +84,69 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       this.idempotentMethods = ImmutableSet.copyOf(idempotentMethods.split(","));
    }
    @Override
-   public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command){
-      ListenableFuture<HttpResponse> response = null;
-      for (;;) {
-         HttpRequest request = command.getCurrentRequest();
-         Q nativeRequest = null;
-         try {
-            for (HttpRequestFilter filter : request.getFilters()) {
-               request = filter.filter(request);
-            }
-            checkRequestHasContentLengthOrChunkedEncoding(request,
-                                                          "After filtering, the request has neither chunked encoding nor content length: " + request);
-            logger.debug("Sending request %s: %s", request.hashCode(), request.getRequestLine());
-            wirePayloadIfEnabled(wire, request);
-            utils.logRequest(headerLog, request, ">>");
-            nativeRequest = convert(request);
-            response = invokeAsync(nativeRequest);
-            break;
-//            logger.debug("Receiving response %s: %s", request.hashCode(), response.getStatusLine());
-//            utils.logResponse(headerLog, response, "<<");
-//            if (response.getPayload() != null && wire.enabled())
-//               wire.input(response);
-//            nativeRequest = null; // response took ownership of streams
-//            int statusCode = response.getStatusCode();
-//            if (statusCode >= 300) {
-//               if (shouldContinue(command, response))
-//                  continue;
-//               else
-//                  break;
-//            } else {
-//               break;
-//            }
-         } catch (Exception e) {
-            IOException ioe = getFirstThrowableOfType(e, IOException.class);
-            if (ioe != null && shouldContinue(command, ioe)) {
-               continue;
-            }
-            command.setException(new HttpResponseException(e.getMessage() + " connecting to "
-                                                                   + command.getCurrentRequest().getRequestLine(), command, null, e));
-            break;
+   public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command){
+      SettableFuture<HttpResponse> finalFuture = SettableFuture.create();
+      this.invokeAsyncInternal(command, finalFuture);
+      return finalFuture;
+   }
 
-         } finally {
-            cleanup(nativeRequest);
+   private void invokeAsyncInternal(final HttpCommand command, final SettableFuture<HttpResponse> finalFuture) {
+      ListenableFuture<HttpResponse> future = null;
+      HttpRequest request = command.getCurrentRequest();
+      try {
+         for (HttpRequestFilter filter : request.getFilters()) {
+            request = filter.filter(request);
          }
+         checkRequestHasContentLengthOrChunkedEncoding(request,
+                 "After filtering, the request has neither chunked encoding nor content length: " + request);
+         logger.debug("Sending request %s: %s", request.hashCode(), request.getRequestLine());
+         wirePayloadIfEnabled(wire, request);
+         utils.logRequest(headerLog, request, ">>");
+         final Q nativeRequest = convert(request);
+         future = invokeAsync(nativeRequest);
+         final int requestHashCode = request.hashCode();
+         Futures.addCallback(future, new FutureCallback<HttpResponse>() {
+            @Override
+            public void onSuccess(HttpResponse response) {
+               logger.debug("Receiving response %s: %s", requestHashCode, response.getStatusLine());
+               utils.logResponse(headerLog, response, "<<");
+               if (response.getPayload() != null && wire.enabled())
+                  wire.input(response);
+               int statusCode = response.getStatusCode();
+               if (statusCode >= 300) {
+                  if (shouldContinue(command, response))
+                     invokeAsyncInternal(command, finalFuture);
+                  else
+                     cleanup(nativeRequest);
+                  finalFuture.set(response);
+               } else {
+                  cleanup(nativeRequest);
+                  finalFuture.set(response);
+               }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+               IOException ioe = getFirstThrowableOfType(t, IOException.class);
+               if (ioe != null && shouldContinue(command, ioe)) {
+                  invokeAsync(command);
+               }
+               RuntimeException exception = new HttpResponseException(t.getMessage() + " connecting to "
+                       + command.getCurrentRequest().getRequestLine(), command, null, t);
+               cleanup(nativeRequest);
+               finalFuture.setException(exception);
+            }
+         });
+      } catch (Exception e) {
+         IOException ioe = getFirstThrowableOfType(e, IOException.class);
+         if (ioe != null && shouldContinue(command, ioe)) {
+            invokeAsync(command);
+         }
+         RuntimeException exception = new HttpResponseException(e.getMessage() + " connecting to "
+                 + command.getCurrentRequest().getRequestLine(), command, null, e);
+         finalFuture.setException(exception);
+
       }
-      if (command.getException() != null)
-         throw propagate(command.getException());
-      return response;
    }
    @Override
    public HttpResponse invoke(HttpCommand command) {
