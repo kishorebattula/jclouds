@@ -45,6 +45,9 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.jclouds.http.HttpCommandExecutorService;
 import org.jclouds.http.HttpUtils;
 import org.jclouds.http.apachehc.ApacheHCHttpCommandExecutorService;
@@ -151,6 +154,15 @@ public class ApacheHCHttpCommandExecutorServiceModule extends AbstractModule {
          client.setRoutePlanner(routePlanner);
       }
       return client;
+   }
+
+   @Provides
+   @Singleton
+   final CloseableHttpAsyncClient newDefaultHttpClient(HttpUtils httpUtils) {
+      final HttpAsyncClientBuilder httpAsyncClientBuilder = HttpAsyncClients.custom();
+      httpAsyncClientBuilder.setMaxConnTotal(httpUtils.getMaxConnections())
+                            .setMaxConnPerRoute(httpUtils.getMaxConnectionsPerHost());
+      return httpAsyncClientBuilder.build();
    }
 
    protected void bindClient() {

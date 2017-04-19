@@ -16,7 +16,7 @@
  */
 package org.jclouds.http;
 
-import java.util.concurrent.CompletableFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Capable of invoking http commands.
@@ -29,6 +29,6 @@ public interface HttpCommandExecutorService {
     */
    HttpResponse invoke(HttpCommand command);
 
-   CompletableFuture<org.apache.http.HttpResponse> invokeAsync(HttpCommand command);
+   ListenableFuture<HttpResponse> invokeAsync(HttpCommand command);
 
 }

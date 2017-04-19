@@ -265,7 +265,7 @@ public abstract class BaseBlobStore implements BlobStore {
    protected abstract boolean deleteAndVerifyContainerGone(String container);
 
    @Override
-   public CompletableFuture<org.apache.http.HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+   public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
       System.out.println("ISSUE: USING THE BASE ASYNC!");
       return null;
    }

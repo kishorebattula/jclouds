@@ -196,7 +196,7 @@ public class RegionScopedSwiftBlobStore implements BlobStore {
       return api.getContainerApi(regionId).create(container, BASIC_CONTAINER);
    }
    @Override
-   public CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+   public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
       System.out.println("ISSUE: USING THE REGION SCOPED BLOBSTORE ASYNC!");
       return null;
    }

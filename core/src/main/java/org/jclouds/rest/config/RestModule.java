@@ -37,12 +37,14 @@ import org.jclouds.rest.AuthorizationException;
 import org.jclouds.rest.binders.BindToJsonPayloadWrappedWith;
 import org.jclouds.rest.internal.RestAnnotationProcessor;
 import org.jclouds.rest.internal.TransformerForRequest;
+import org.jclouds.rest.internal.TransformerForRequestAsync;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.common.util.concurrent.ListenableFuture;
 
 public class RestModule extends AbstractModule {
    protected final AtomicReference<AuthorizationException> authException = newReference();
@@ -59,6 +61,8 @@ public class RestModule extends AbstractModule {
       install(new FactoryModuleBuilder().build(BindToJsonPayloadWrappedWith.Factory.class));
       bind(new TypeLiteral<Function<HttpRequest, Function<HttpResponse, ?>>>() {
       }).to(TransformerForRequest.class);
+      bind(new TypeLiteral<Function<HttpRequest, Function<ListenableFuture<HttpResponse>, ?>>>(){
+      }).to(TransformerForRequestAsync.class);
       bind(new TypeLiteral<org.jclouds.Fallback<Object>>() {
       }).to(MapHttp4xxCodesToExceptions.class);
       bind(new TypeLiteral<Function<Invocation, HttpRequest>>() {

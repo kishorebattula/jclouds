@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import com.google.common.collect.ForwardingObject;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.apache.http.HttpResponse;
 import org.jclouds.blobstore.BlobStore;
@@ -91,7 +92,7 @@ public abstract class ForwardingBlobStore extends ForwardingObject
       return delegate().createContainerInLocation(location, container);
    }
    @Override
-   public CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+   public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
       System.out.println("ISSUE: USING THE FORWARDING BLOBSTORE ASYNC!");
       return null;
    }

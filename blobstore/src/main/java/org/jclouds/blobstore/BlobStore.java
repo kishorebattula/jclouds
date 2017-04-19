@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.http.HttpResponse;
@@ -43,6 +42,7 @@ import org.jclouds.io.Payload;
 import org.jclouds.javax.annotation.Nullable;
 
 import com.google.common.annotations.Beta;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Synchronous access to a BlobStore such as Amazon S3
@@ -326,7 +326,7 @@ public interface BlobStore {
     */
    void removeBlobs(String container, Iterable<String> names);
 
-   CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception;
+   ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception;
 
    @Beta
    BlobAccess getBlobAccess(String container, String name);

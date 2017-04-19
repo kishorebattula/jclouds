@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -84,6 +83,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Ints;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.io.ContentMetadataBuilder;
 import org.jclouds.io.Payload;
 
@@ -223,7 +223,7 @@ public class AzureBlobStore extends BaseBlobStore {
    }
 
    @Override
-   public CompletableFuture<HttpResponse> putBlobAsync(String container, Blob blob) throws Exception{
+   public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
       return sync.putBlobAsync(container, blob2AzureBlob.apply(blob));
    }
    /**

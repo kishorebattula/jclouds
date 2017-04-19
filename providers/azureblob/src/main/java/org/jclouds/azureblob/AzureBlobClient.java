@@ -23,7 +23,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import java.util.concurrent.CompletableFuture;
 import javax.inject.Named;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -72,6 +71,7 @@ import org.jclouds.blobstore.BlobStoreFallbacks.NullOnContainerNotFound;
 import org.jclouds.blobstore.BlobStoreFallbacks.NullOnKeyNotFound;
 import org.jclouds.blobstore.binders.BindMapToHeadersWithPrefix;
 import org.jclouds.http.functions.ParseETagHeader;
+import org.jclouds.http.functions.ParseETagHeaderAsync;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.ContentMetadata;
 import org.jclouds.io.Payload;
@@ -86,8 +86,10 @@ import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.ResponseParser;
 import org.jclouds.rest.annotations.SkipEncoding;
 import org.jclouds.rest.annotations.XMLResponseParser;
+import org.jclouds.rest.annotations.ResponseParserAsync;
 
 import com.google.inject.Provides;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /** Provides access to Azure Blob via their REST API.  */
 @RequestFilters(SharedKeyLiteAuthentication.class)
@@ -343,9 +345,9 @@ public interface AzureBlobClient extends Closeable {
    @PUT
    @Path("{container}/{name}")
    @Headers(keys = EXPECT, values = "100-continue")
-   @ResponseParser(ParseETagHeader.class)
-   CompletableFuture<HttpResponse> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
-       @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
+   @ResponseParserAsync(ParseETagHeaderAsync.class)
+   ListenableFuture<String> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+                                                                           @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
            AzureBlob object);
 
 
