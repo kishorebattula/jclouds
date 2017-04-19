@@ -325,7 +325,7 @@ public interface BlobStore {
     */
    void removeBlobs(String container, Iterable<String> names);
 
-   ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception;
+   ListenableFuture<String> putBlobAsync(String container, Blob blob);
 
    @Beta
    BlobAccess getBlobAccess(String container, String name);

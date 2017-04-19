@@ -219,7 +219,7 @@ public class AzureBlobStore extends BaseBlobStore {
    }
 
    @Override
-   public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
+   public ListenableFuture<String> putBlobAsync(String container, Blob blob) {
       return sync.putBlobAsync(container, blob2AzureBlob.apply(blob));
    }
    /**

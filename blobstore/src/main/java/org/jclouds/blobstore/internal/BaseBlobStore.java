@@ -264,7 +264,7 @@ public abstract class BaseBlobStore implements BlobStore {
    protected abstract boolean deleteAndVerifyContainerGone(String container);
 
    @Override
-   public ListenableFuture<String> putBlobAsync(String container, Blob blob) throws Exception{
+   public ListenableFuture<String> putBlobAsync(String container, Blob blob) {
       throw new UnsupportedOperationException("unsupported operation");
    }
    @Override

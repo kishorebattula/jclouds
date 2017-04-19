@@ -345,9 +345,10 @@ public interface AzureBlobClient extends Closeable {
    @Path("{container}/{name}")
    @Headers(keys = EXPECT, values = "100-continue")
    @ResponseParserAsync(ParseETagHeaderAsync.class)
-   ListenableFuture<String> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
-                                                                           @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
-           AzureBlob object);
+   ListenableFuture<String> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class)
+         String container,
+         @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
+         AzureBlob object);
 
 
    /**
