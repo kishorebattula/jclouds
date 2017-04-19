@@ -26,18 +26,12 @@ import static org.jclouds.util.Throwables2.getFirstThrowableOfType;
 
 import java.io.IOException;
 import java.net.ProtocolException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
 import org.jclouds.Constants;
 import org.jclouds.http.HttpCommand;
 import org.jclouds.http.HttpCommandExecutorService;

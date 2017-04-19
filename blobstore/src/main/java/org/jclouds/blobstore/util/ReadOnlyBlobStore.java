@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import org.apache.http.HttpResponse;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.domain.Blob;

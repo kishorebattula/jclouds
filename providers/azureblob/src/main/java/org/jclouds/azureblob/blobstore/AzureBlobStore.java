@@ -30,10 +30,6 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.InputStreamEntity;
 import org.jclouds.azure.storage.domain.BoundedSet;
 import org.jclouds.azureblob.AzureBlobClient;
 import org.jclouds.azureblob.blobstore.functions.AzureBlobToBlob;
@@ -512,9 +508,5 @@ public class AzureBlobStore extends BaseBlobStore {
    @Override
    public InputStream streamBlob(String container, String name) {
       throw new UnsupportedOperationException("Azure does not support streaming a blob");
-   }
-
-   private String getUrl(String container, String name){
-      return "https://storageperftest.blob.core.windows.net/"+container+"/"+name+"?sv=2015-12-11&ss=bfqt&srt=sco&sp=rwdlacup&se=2017-04-30T21:40:10Z&st=2017-02-01T13:40:10Z&spr=https,http&sig=zGnb14jtAoZQIlySSMdlbVHF6cDkBgKIluwOjMyFldU%3D";
    }
 }
