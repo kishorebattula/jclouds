@@ -129,7 +129,7 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
 
    @Override
    protected ListenableFuture<HttpResponse> invokeAsync(final HttpURLConnection nativeRequest) {
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
 
    @Override

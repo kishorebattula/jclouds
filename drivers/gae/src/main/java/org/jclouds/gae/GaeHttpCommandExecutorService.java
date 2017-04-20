@@ -92,6 +92,6 @@ public class GaeHttpCommandExecutorService extends BaseHttpCommandExecutorServic
 
    @Override
    protected ListenableFuture<HttpResponse> invokeAsync(final HTTPRequest nativeRequest) {
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
 }

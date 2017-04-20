@@ -180,7 +180,7 @@ public final class OkHttpCommandExecutorService extends BaseHttpCommandExecutorS
 
    @Override
    protected ListenableFuture<HttpResponse> invokeAsync(final Request nativeRequest) {
-      return null;
+      throw new UnsupportedOperationException("unsupported operation");
    }
 
    @Override
