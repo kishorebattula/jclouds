@@ -23,18 +23,23 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.jclouds.http.HttpCommandExecutorService;
+import org.jclouds.http.HttpResponse;
 import org.jclouds.http.HttpUtils;
 import org.jclouds.http.config.ConfiguresHttpCommandExecutorService;
 import org.jclouds.http.config.SSLModule;
 import org.jclouds.http.okhttp.OkHttpClientSupplier;
 import org.jclouds.http.okhttp.OkHttpCommandExecutorService;
+import org.jclouds.http.okhttp.OkHttpCommandExecutorService.ResponseTransformer;
 
+import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Response;
 
 /**
  * Configures the {@link OkHttpCommandExecutorService}.
@@ -49,6 +54,8 @@ public class OkHttpCommandExecutorServiceModule extends AbstractModule {
       install(new SSLModule());
       bind(HttpCommandExecutorService.class).to(OkHttpCommandExecutorService.class).in(Scopes.SINGLETON);
       bind(OkHttpClient.class).toProvider(OkHttpClientProvider.class).in(Scopes.SINGLETON);
+      bind(new TypeLiteral<Function<Response, HttpResponse>>() {
+      }).to(ResponseTransformer.class).in(Scopes.SINGLETON);
    }
 
    private static final class OkHttpClientProvider implements Provider<OkHttpClient> {
