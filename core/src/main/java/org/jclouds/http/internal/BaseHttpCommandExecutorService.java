@@ -103,8 +103,8 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
          wirePayloadIfEnabled(wire, request);
          utils.logRequest(headerLog, request, ">>");
          final Q nativeRequest = convert(request);
-         future = invokeAsync(nativeRequest);
          final int requestHashCode = request.hashCode();
+         future = invokeAsync(nativeRequest);
          Futures.addCallback(future, new FutureCallback<HttpResponse>() {
             @Override
             public void onSuccess(HttpResponse response) {
