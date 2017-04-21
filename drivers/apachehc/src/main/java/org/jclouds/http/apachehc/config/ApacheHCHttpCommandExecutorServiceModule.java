@@ -68,6 +68,7 @@ import com.google.inject.Scopes;
  */
 @ConfiguresHttpCommandExecutorService
 public class ApacheHCHttpCommandExecutorServiceModule extends AbstractModule {
+   private volatile CloseableHttpAsyncClient httpAsyncClient = null;
 
    @Override
    protected void configure() {
@@ -157,12 +158,19 @@ public class ApacheHCHttpCommandExecutorServiceModule extends AbstractModule {
    }
 
    @Provides
-   @Singleton
    final CloseableHttpAsyncClient newDefaultHttpClient(HttpUtils httpUtils) {
-      final HttpAsyncClientBuilder httpAsyncClientBuilder = HttpAsyncClients.custom();
-      httpAsyncClientBuilder.setMaxConnTotal(httpUtils.getMaxConnections())
-                            .setMaxConnPerRoute(httpUtils.getMaxConnectionsPerHost());
-      return httpAsyncClientBuilder.build();
+      if (this.httpAsyncClient == null) {
+         synchronized (this) {
+            if(this.httpAsyncClient == null) {
+               final HttpAsyncClientBuilder httpAsyncClientBuilder = HttpAsyncClients.custom();
+               httpAsyncClientBuilder.setMaxConnTotal(httpUtils.getMaxConnections())
+                       .setMaxConnPerRoute(httpUtils.getMaxConnectionsPerHost());
+               this.httpAsyncClient = httpAsyncClientBuilder.build();
+               this.httpAsyncClient.start();
+            }
+         }
+      }
+      return this.httpAsyncClient;
    }
 
    protected void bindClient() {

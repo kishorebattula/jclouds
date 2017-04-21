@@ -28,6 +28,8 @@ import java.net.URI;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.base.Supplier;
+import com.google.inject.Provider;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -61,7 +63,10 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorService<HttpUriRequest> {
    private final HttpClient client;
-   private final CloseableHttpAsyncClient asyncClient;
+   /**
+    * Using provider to create the instance on first usage.
+    */
+   private final Provider<CloseableHttpAsyncClient>asyncClientProvider;
    private final ApacheHCUtils apacheHCUtils;
    private final String userAgent;
 
@@ -69,13 +74,12 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
    ApacheHCHttpCommandExecutorService(HttpUtils utils, ContentMetadataCodec contentMetadataCodec,
          DelegatingRetryHandler retryHandler, IOExceptionRetryHandler ioRetryHandler,
          DelegatingErrorHandler errorHandler, HttpWire wire, HttpClient client,
-         final CloseableHttpAsyncClient asyncClient,
+         Provider<CloseableHttpAsyncClient> asyncClientProvider,
          @Named(PROPERTY_IDEMPOTENT_METHODS) String idempotentMethods,
          @Named(PROPERTY_USER_AGENT) String userAgent) {
       super(utils, contentMetadataCodec, retryHandler, ioRetryHandler, errorHandler, wire, idempotentMethods);
       this.client = client;
-      this.asyncClient = asyncClient;
-      this.asyncClient.start();
+      this.asyncClientProvider = asyncClientProvider;
       this.apacheHCUtils = new ApacheHCUtils(contentMetadataCodec);
       this.userAgent = userAgent;
    }
@@ -155,9 +159,8 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
 
    private ListenableFuture<org.apache.http.HttpResponse> executeRequestAsync(HttpUriRequest nativeRequest) {
       final SettableFuture<org.apache.http.HttpResponse> future = SettableFuture.create();
-      // Copying MDC context because we are making an asynchronous call
 
-      this.asyncClient.execute(nativeRequest, new FutureCallback<org.apache.http.HttpResponse>() {
+      this.asyncClientProvider.get().execute(nativeRequest, new FutureCallback<org.apache.http.HttpResponse>() {
          @Override
          public void completed(final org.apache.http.HttpResponse httpResponse) {
             future.set(httpResponse);
