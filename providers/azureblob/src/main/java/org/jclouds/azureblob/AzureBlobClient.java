@@ -70,7 +70,6 @@ import org.jclouds.blobstore.BlobStoreFallbacks.NullOnContainerNotFound;
 import org.jclouds.blobstore.BlobStoreFallbacks.NullOnKeyNotFound;
 import org.jclouds.blobstore.binders.BindMapToHeadersWithPrefix;
 import org.jclouds.http.functions.ParseETagHeader;
-import org.jclouds.http.functions.ParseETagHeaderAsync;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.ContentMetadata;
 import org.jclouds.io.Payload;
@@ -85,7 +84,6 @@ import org.jclouds.rest.annotations.RequestFilters;
 import org.jclouds.rest.annotations.ResponseParser;
 import org.jclouds.rest.annotations.SkipEncoding;
 import org.jclouds.rest.annotations.XMLResponseParser;
-import org.jclouds.rest.annotations.ResponseParserAsync;
 
 import com.google.inject.Provides;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -344,7 +342,7 @@ public interface AzureBlobClient extends Closeable {
    @PUT
    @Path("{container}/{name}")
    @Headers(keys = EXPECT, values = "100-continue")
-   @ResponseParserAsync(ParseETagHeaderAsync.class)
+   @ResponseParser(ParseETagHeader.class)
    ListenableFuture<String> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class)
          String container,
          @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)

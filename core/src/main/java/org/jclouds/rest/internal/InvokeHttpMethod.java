@@ -41,7 +41,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Futures;
 
 public class InvokeHttpMethod implements Function<Invocation, Object> {
 
@@ -52,20 +52,17 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
    private final HttpCommandExecutorService http;
    private final TimeLimiter timeLimiter;
    private final Function<HttpRequest, Function<HttpResponse, ?>> transformerForRequest;
-   private final Function<HttpRequest, Function<ListenableFuture<HttpResponse>, ?>> transformerForRequestAsync;
    private final InvocationConfig config;
 
    @Inject
    @VisibleForTesting
    InvokeHttpMethod(Function<Invocation, HttpRequest> annotationProcessor,
          HttpCommandExecutorService http, Function<HttpRequest, Function<HttpResponse, ?>> transformerForRequest,
-                    Function<HttpRequest, Function<ListenableFuture<HttpResponse>, ?>> transformerForRequestAsync,
          TimeLimiter timeLimiter, InvocationConfig config) {
       this.annotationProcessor = annotationProcessor;
       this.http = http;
       this.timeLimiter = timeLimiter;
       this.transformerForRequest = transformerForRequest;
-      this.transformerForRequestAsync = transformerForRequestAsync;
       this.config = config;
    }
 
@@ -88,14 +85,13 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
 
       String commandName = config.getCommandName(invocation);
       HttpCommand command = toCommand(commandName, invocation);
+      Function<HttpResponse, ?> transformer = getTransformer(commandName, command);
       org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
       logger.debug(">> invoking %s", commandName);
       try {
          if(invocation.getInvokable().isAnnotationPresent(Async.class)){
-            Function<ListenableFuture<HttpResponse>, ?> transformerAsync = getTransformerAsync(commandName, command);
-            return transformerAsync.apply(http.invokeAsync(command));
+            return Futures.transform(http.invokeAsync(command), transformer);
          }else{
-            Function<HttpResponse, ?> transformer = getTransformer(commandName, command);
             return transformer.apply(http.invoke(command));
          }
       } catch (Throwable t) {
@@ -203,13 +199,6 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
    private Function<HttpResponse, ?> getTransformer(String commandName, HttpCommand command) {
       HttpRequest request = command.getCurrentRequest();
       Function<HttpResponse, ?> transformer = transformerForRequest.apply(request);
-      logger.trace("<< response from %s is parsed by %s", commandName, transformer.getClass().getSimpleName());
-      return transformer;
-   }
-
-   private Function<ListenableFuture<HttpResponse>, ?> getTransformerAsync(String commandName, HttpCommand command) {
-      HttpRequest request = command.getCurrentRequest();
-      Function<ListenableFuture<HttpResponse>, ?> transformer = transformerForRequestAsync.apply(request);
       logger.trace("<< response from %s is parsed by %s", commandName, transformer.getClass().getSimpleName());
       return transformer;
    }
