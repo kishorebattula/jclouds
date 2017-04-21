@@ -193,7 +193,7 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
       logger.trace(">> converting %s", commandName);
       HttpRequest request = annotationProcessor.apply(invocation);
       logger.trace("<< converted %s to %s", commandName, request.getRequestLine());
-      return new HttpCommand(request);
+      return new HttpCommand(request, invocation.getInvokable().isAnnotationPresent(Async.class));
    }
 
    private Function<HttpResponse, ?> getTransformer(String commandName, HttpCommand command) {
