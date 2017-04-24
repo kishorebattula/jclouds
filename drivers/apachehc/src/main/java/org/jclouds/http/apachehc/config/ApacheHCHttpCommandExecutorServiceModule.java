@@ -48,6 +48,7 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
+import org.jclouds.collect.Memoized;
 import org.jclouds.http.HttpCommandExecutorService;
 import org.jclouds.http.HttpUtils;
 import org.jclouds.http.apachehc.ApacheHCHttpCommandExecutorService;
@@ -60,6 +61,7 @@ import com.google.common.base.Supplier;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.common.base.Suppliers;
 
 /**
  * Configures {@link ApacheHCHttpCommandExecutorService}.
@@ -68,7 +70,6 @@ import com.google.inject.Scopes;
  */
 @ConfiguresHttpCommandExecutorService
 public class ApacheHCHttpCommandExecutorServiceModule extends AbstractModule {
-   private volatile CloseableHttpAsyncClient httpAsyncClient = null;
 
    @Override
    protected void configure() {
@@ -157,21 +158,30 @@ public class ApacheHCHttpCommandExecutorServiceModule extends AbstractModule {
       return client;
    }
 
+   @Memoized
    @Provides
-   final CloseableHttpAsyncClient newDefaultHttpClient(HttpUtils httpUtils) {
-      if (this.httpAsyncClient == null) {
-         synchronized (this) {
-            if(this.httpAsyncClient == null) {
-               final HttpAsyncClientBuilder httpAsyncClientBuilder = HttpAsyncClients.custom();
-               httpAsyncClientBuilder.setMaxConnTotal(httpUtils.getMaxConnections())
-                       .setMaxConnPerRoute(httpUtils.getMaxConnectionsPerHost());
-               this.httpAsyncClient = httpAsyncClientBuilder.build();
-               this.httpAsyncClient.start();
-            }
-         }
-      }
-      return this.httpAsyncClient;
+   protected final Supplier<CloseableHttpAsyncClient> memoizedAyncClient(
+           Supplier<CloseableHttpAsyncClient> asyncClient) {
+      return Suppliers.memoize(asyncClient);
    }
+
+   @Provides
+   protected final Supplier<CloseableHttpAsyncClient> asyncClient(final HttpUtils httpUtils) {
+      return new Supplier<CloseableHttpAsyncClient>() {
+         @Override
+         public CloseableHttpAsyncClient get() {
+            final HttpAsyncClientBuilder httpAsyncClientBuilder =
+                    HttpAsyncClients.custom();
+            httpAsyncClientBuilder.setMaxConnTotal(httpUtils.getMaxConnections())
+                    .setMaxConnPerRoute(httpUtils.getMaxConnectionsPerHost());
+            CloseableHttpAsyncClient httpAsyncClient =
+                    httpAsyncClientBuilder.build();
+            httpAsyncClient.start();
+            return httpAsyncClient;
+         }
+      };
+   }
+
 
    protected void bindClient() {
       bind(HttpCommandExecutorService.class).to(ApacheHCHttpCommandExecutorService.class).in(Scopes.SINGLETON);

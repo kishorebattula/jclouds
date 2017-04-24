@@ -38,6 +38,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.concurrent.FutureCallback;
+import org.jclouds.collect.Memoized;
 import org.jclouds.http.HttpRequest;
 import org.jclouds.http.HttpResponse;
 import org.jclouds.http.HttpUtils;
@@ -66,7 +67,7 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
    /**
     * Using provider to create the instance on first usage.
     */
-   private final Provider<CloseableHttpAsyncClient>asyncClientProvider;
+   private final Supplier<CloseableHttpAsyncClient> asyncClientSupplier;
    private final ApacheHCUtils apacheHCUtils;
    private final String userAgent;
 
@@ -74,12 +75,12 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
    ApacheHCHttpCommandExecutorService(HttpUtils utils, ContentMetadataCodec contentMetadataCodec,
          DelegatingRetryHandler retryHandler, IOExceptionRetryHandler ioRetryHandler,
          DelegatingErrorHandler errorHandler, HttpWire wire, HttpClient client,
-         Provider<CloseableHttpAsyncClient> asyncClientProvider,
+         @Memoized Supplier<CloseableHttpAsyncClient> asyncClientSupplier,
          @Named(PROPERTY_IDEMPOTENT_METHODS) String idempotentMethods,
          @Named(PROPERTY_USER_AGENT) String userAgent) {
       super(utils, contentMetadataCodec, retryHandler, ioRetryHandler, errorHandler, wire, idempotentMethods);
       this.client = client;
-      this.asyncClientProvider = asyncClientProvider;
+      this.asyncClientSupplier = asyncClientSupplier;
       this.apacheHCUtils = new ApacheHCUtils(contentMetadataCodec);
       this.userAgent = userAgent;
    }
@@ -160,7 +161,7 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
    private ListenableFuture<org.apache.http.HttpResponse> executeRequestAsync(HttpUriRequest nativeRequest) {
       final SettableFuture<org.apache.http.HttpResponse> future = SettableFuture.create();
 
-      this.asyncClientProvider.get().execute(nativeRequest, new FutureCallback<org.apache.http.HttpResponse>() {
+      this.asyncClientSupplier.get().execute(nativeRequest, new FutureCallback<org.apache.http.HttpResponse>() {
          @Override
          public void completed(final org.apache.http.HttpResponse httpResponse) {
             future.set(httpResponse);
