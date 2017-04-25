@@ -218,10 +218,6 @@ public class AzureBlobStore extends BaseBlobStore {
       return sync.putBlob(container, blob2AzureBlob.apply(blob));
    }
 
-   @Override
-   public ListenableFuture<String> putBlobAsync(String container, Blob blob) {
-      return sync.putBlobAsync(container, blob2AzureBlob.apply(blob));
-   }
    /**
     * This implementation invokes {@link AzureBlobClient#putObject}
     *
