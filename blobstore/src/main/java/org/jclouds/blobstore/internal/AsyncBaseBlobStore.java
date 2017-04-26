@@ -1,8 +1,10 @@
 package org.jclouds.blobstore.internal;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.util.BlobUtils;
 import org.jclouds.blobstore.util.internal.BlobUtilsImpl;
@@ -33,5 +35,19 @@ public abstract class AsyncBaseBlobStore implements AsyncBlobStore {
     @Override
     public BlobBuilder blobBuilder(String name) {
         return blobUtils.blobBuilder().name(name);
+    }
+
+    /**
+     * This implementation invokes
+     * {@link #getBlob(String,String,org.jclouds.blobstore.options.GetOptions)}
+     *
+     * @param container
+     *           container name
+     * @param key
+     *           blob key
+     */
+    @Override
+    public ListenableFuture<Blob> getBlob(String container, String key) {
+        return getBlob(container, key, org.jclouds.blobstore.options.GetOptions.NONE);
     }
 }
