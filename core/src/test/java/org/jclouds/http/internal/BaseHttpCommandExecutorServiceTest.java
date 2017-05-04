@@ -16,26 +16,11 @@
  */
 package org.jclouds.http.internal;
 
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.getCurrentArguments;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
-import static org.jclouds.http.HttpUtils.closeClientButKeepContentStream;
-import static org.jclouds.http.HttpUtils.releasePayload;
-import static org.jclouds.io.Payloads.newInputStreamPayload;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.name.Names;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.jclouds.http.HttpCommand;
@@ -51,10 +36,24 @@ import org.jclouds.io.ContentMetadataCodec;
 import org.jclouds.rest.internal.BaseHttpApiMetadata;
 import org.testng.annotations.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.name.Names;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.getCurrentArguments;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
+import static org.jclouds.http.HttpUtils.closeClientButKeepContentStream;
+import static org.jclouds.http.HttpUtils.releasePayload;
+import static org.jclouds.io.Payloads.newInputStreamPayload;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test(groups = "unit", testName = "BaseHttpCommandExecutorServiceTest")
 public class BaseHttpCommandExecutorServiceTest {
@@ -321,6 +320,11 @@ public class BaseHttpCommandExecutorServiceTest {
 
       @Override
       protected HttpResponse invoke(Object nativeRequest) throws IOException, InterruptedException {
+         return null;
+      }
+
+      @Override
+      protected ListenableFuture<HttpResponse> invokeAsync(Object nativeRequest) {
          return null;
       }
 
