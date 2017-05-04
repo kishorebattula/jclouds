@@ -70,10 +70,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-public abstract class BaseBlobStore implements BlobStore {
+public abstract class BaseBlobStore extends AbstractBlobStore implements BlobStore {
 
-   protected final BlobStoreContext context;
-   protected final BlobUtils blobUtils;
    protected final Supplier<Location> defaultLocation;
    protected final Supplier<Set<? extends Location>> locations;
    protected final PayloadSlicer slicer;
@@ -81,8 +79,7 @@ public abstract class BaseBlobStore implements BlobStore {
    @Inject
    protected BaseBlobStore(BlobStoreContext context, BlobUtils blobUtils, Supplier<Location> defaultLocation,
          @Memoized Supplier<Set<? extends Location>> locations, PayloadSlicer slicer) {
-      this.context = checkNotNull(context, "context");
-      this.blobUtils = checkNotNull(blobUtils, "blobUtils");
+      super(context, blobUtils);
       this.defaultLocation = checkNotNull(defaultLocation, "defaultLocation");
       this.locations = checkNotNull(locations, "locations");
       this.slicer = checkNotNull(slicer, "slicer");

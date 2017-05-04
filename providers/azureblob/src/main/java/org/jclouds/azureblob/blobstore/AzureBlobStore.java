@@ -36,6 +36,7 @@ import org.jclouds.azureblob.blobstore.functions.AzureBlobToBlob;
 import org.jclouds.azureblob.blobstore.functions.BlobPropertiesToBlobMetadata;
 import org.jclouds.azureblob.blobstore.functions.BlobToAzureBlob;
 import org.jclouds.azureblob.blobstore.functions.ContainerToResourceMetadata;
+import org.jclouds.azureblob.blobstore.functions.CreateContainerOptionsToAzureCreateContainerOptions;
 import org.jclouds.azureblob.blobstore.functions.ListBlobsResponseToResourceList;
 import org.jclouds.azureblob.blobstore.functions.ListOptionsToListBlobsOptions;
 import org.jclouds.azureblob.domain.AzureBlob;
@@ -92,6 +93,7 @@ public class AzureBlobStore extends BaseBlobStore {
    private final BlobToAzureBlob blob2AzureBlob;
    private final BlobPropertiesToBlobMetadata blob2BlobMd;
    private final BlobToHttpGetOptions blob2ObjectGetOptions;
+   private final CreateContainerOptionsToAzureCreateContainerOptions createContainerOptionsToAzureContainerOptions;
 
 
    @Inject
@@ -101,7 +103,8 @@ public class AzureBlobStore extends BaseBlobStore {
             ListOptionsToListBlobsOptions blobStore2AzureContainerListOptions,
             ListBlobsResponseToResourceList azure2BlobStoreResourceList, AzureBlobToBlob azureBlob2Blob,
             BlobToAzureBlob blob2AzureBlob, BlobPropertiesToBlobMetadata blob2BlobMd,
-            BlobToHttpGetOptions blob2ObjectGetOptions) {
+            BlobToHttpGetOptions blob2ObjectGetOptions,
+            CreateContainerOptionsToAzureCreateContainerOptions createContainerOptionsToAzureContainerOptions) {
       super(context, blobUtils, defaultLocation, locations, slicer);
       this.sync = checkNotNull(sync, "sync");
       this.container2ResourceMd = checkNotNull(container2ResourceMd, "container2ResourceMd");
@@ -112,6 +115,7 @@ public class AzureBlobStore extends BaseBlobStore {
       this.blob2AzureBlob = checkNotNull(blob2AzureBlob, "blob2AzureBlob");
       this.blob2BlobMd = checkNotNull(blob2BlobMd, "blob2BlobMd");
       this.blob2ObjectGetOptions = checkNotNull(blob2ObjectGetOptions, "blob2ObjectGetOptions");
+      this.createContainerOptionsToAzureContainerOptions = createContainerOptionsToAzureContainerOptions;
    }
 
    /**
@@ -361,10 +365,7 @@ public class AzureBlobStore extends BaseBlobStore {
 
    @Override
    public boolean createContainerInLocation(Location location, String container, CreateContainerOptions options) {
-      org.jclouds.azureblob.options.CreateContainerOptions createContainerOptions = new org.jclouds.azureblob.options.CreateContainerOptions();
-      if (options.isPublicRead())
-         createContainerOptions.withPublicAccess(PublicAccess.CONTAINER);
-      return sync.createContainer(container, createContainerOptions);
+      return sync.createContainer(container, createContainerOptionsToAzureContainerOptions.apply(options));
    }
 
    @Override

@@ -26,16 +26,11 @@ import org.jclouds.blobstore.domain.BlobBuilder;
 import org.jclouds.blobstore.util.BlobUtils;
 import org.jclouds.blobstore.util.internal.BlobUtilsImpl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-public abstract class AsyncBaseBlobStore implements AsyncBlobStore {
-    protected final BlobStoreContext context;
-    protected final BlobUtils blobUtils;
+public abstract class AsyncBaseBlobStore extends AbstractBlobStore implements AsyncBlobStore {
 
     @Inject
     protected AsyncBaseBlobStore(BlobStoreContext context, BlobUtils blobUtils) {
-        this.context = checkNotNull(context, "context");
-        this.blobUtils = checkNotNull(blobUtils, "blobUtils");
+        super(context, blobUtils);
     }
 
     @Override

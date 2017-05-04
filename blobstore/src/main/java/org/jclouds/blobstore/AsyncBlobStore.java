@@ -17,11 +17,21 @@
 
 package org.jclouds.blobstore;
 
+import com.google.common.annotations.Beta;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.domain.BlobBuilder;
+import org.jclouds.blobstore.domain.BlobMetadata;
+import org.jclouds.blobstore.domain.MultipartPart;
+import org.jclouds.blobstore.domain.MultipartUpload;
+import org.jclouds.blobstore.options.CreateContainerOptions;
 import org.jclouds.blobstore.options.GetOptions;
+import org.jclouds.blobstore.options.PutOptions;
+import org.jclouds.domain.Location;
+import org.jclouds.io.Payload;
 import org.jclouds.javax.annotation.Nullable;
+
+import java.util.List;
 
 /**
  * Asynchronous access to BlobStore like Amazon s3 and Azure storage etc...
@@ -37,6 +47,40 @@ public interface AsyncBlobStore {
      * @return builder for creating new {@link Blob}s
      */
     BlobBuilder blobBuilder(String name);
+
+    /**
+     * determines if a service-level container exists
+     */
+    ListenableFuture<Boolean> containerExists(String container);
+
+    /**
+     * Creates a namespace for your blobs
+     * <p/>
+     *
+     * A container is a namespace for your objects. Depending on the service, the scope can be
+     * global, identity, or sub-identity scoped. For example, in Amazon S3, containers are called
+     * buckets, and they must be uniquely named such that no-one else in the world conflicts. In
+     * other blobstores, the naming convention of the container is less strict. All blobstores allow
+     * you to list your containers and also the contents within them. These contents can either be
+     * blobs, folders, or virtual paths.
+     *
+     * @param location
+     *           some blobstores allow you to specify a location, such as US-EAST, for where this
+     *           container will exist. null will choose a default location
+     * @param container
+     *           namespace. Typically constrained to lowercase alpha-numeric and hyphens.
+     * @return true if the container was created, false if it already existed.
+     */
+    ListenableFuture<Boolean> createContainerInLocation(@Nullable Location location, String container);
+
+    /**
+     *
+     * @param options
+     *           controls default access control
+     * @see #createContainerInLocation(Location,String)
+     */
+    ListenableFuture<Boolean> createContainerInLocation(@Nullable Location location, String container,
+          CreateContainerOptions options);
 
     /**
      * Adds a {@code Blob} representing the data at location {@code container/blob.metadata.name}
@@ -78,4 +122,20 @@ public interface AsyncBlobStore {
      */
     @Nullable
     ListenableFuture<Blob> getBlob(String container, String name, GetOptions options);
+
+    @Beta
+    ListenableFuture<MultipartUpload> initiateMultipartUpload(String container, BlobMetadata blob, PutOptions options);
+
+    @Beta
+        // TODO: take parts?
+    ListenableFuture<Void> abortMultipartUpload(MultipartUpload mpu);
+
+    @Beta
+    ListenableFuture<String> completeMultipartUpload(MultipartUpload mpu, List<MultipartPart> parts);
+
+    @Beta
+    ListenableFuture<MultipartPart> uploadMultipartPart(MultipartUpload mpu, int partNumber, Payload payload);
+
+    @Beta
+    ListenableFuture<List<MultipartPart>> listMultipartUpload(MultipartUpload mpu);
 }
