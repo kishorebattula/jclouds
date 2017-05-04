@@ -89,9 +89,9 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
       org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
       logger.debug(">> invoking %s", commandName);
       try {
-         if(invocation.getInvokable().isAnnotationPresent(Async.class)){
+         if (invocation.getInvokable().isAnnotationPresent(Async.class)) {
             return Futures.transform(http.invokeAsync(command), transformer);
-         }else{
+         } else {
             return transformer.apply(http.invoke(command));
          }
       } catch (Throwable t) {
