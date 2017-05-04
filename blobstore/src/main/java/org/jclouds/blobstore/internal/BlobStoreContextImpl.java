@@ -55,7 +55,7 @@ public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
       this.blobStore = checkNotNull(blobStore, "blobStore");
       this.utils = checkNotNull(utils, "utils");
       this.blobRequestSigner = checkNotNull(blobRequestSigner, "blobRequestSigner");
-      Binding<AsyncBlobStore> asyncBlobStoreBinding = injector.getBinding(Key.get(AsyncBlobStore.class));
+      Binding<AsyncBlobStore> asyncBlobStoreBinding = injector.getExistingBinding(Key.get(AsyncBlobStore.class));
       if (asyncBlobStoreBinding != null) {
          asyncBlobStore = asyncBlobStoreBinding.getProvider().get();
       } else {
