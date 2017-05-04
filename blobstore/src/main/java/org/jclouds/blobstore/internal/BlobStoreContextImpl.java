@@ -41,7 +41,7 @@ import com.google.common.reflect.TypeToken;
 @Singleton
 public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
    private final BlobStore blobStore;
-   private final Binding<AsyncBlobStore> asyncBlobStoreBinding;
+   private final AsyncBlobStore asyncBlobStore;
    private final ConsistencyModel consistencyModel;
    private final Utils utils;
    private final BlobRequestSigner blobRequestSigner;
@@ -55,7 +55,12 @@ public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
       this.blobStore = checkNotNull(blobStore, "blobStore");
       this.utils = checkNotNull(utils, "utils");
       this.blobRequestSigner = checkNotNull(blobRequestSigner, "blobRequestSigner");
-      this.asyncBlobStoreBinding = injector.getBinding(Key.get(AsyncBlobStore.class));
+      Binding<AsyncBlobStore> asyncBlobStoreBinding = injector.getBinding(Key.get(AsyncBlobStore.class));
+      if (asyncBlobStoreBinding != null) {
+         asyncBlobStore = asyncBlobStoreBinding.getProvider().get();
+      } else {
+         asyncBlobStore = null;
+      }
    }
 
    @Override
@@ -70,8 +75,7 @@ public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
 
    @Override
    public Optional<AsyncBlobStore> getAsyncBlobStore() {
-      return asyncBlobStoreBinding == null ? Optional.<AsyncBlobStore>absent()
-              : Optional.of(asyncBlobStoreBinding.getProvider().get());
+      return asyncBlobStore == null ? Optional.<AsyncBlobStore>absent(): Optional.of(asyncBlobStore);
    }
 
    @Override
