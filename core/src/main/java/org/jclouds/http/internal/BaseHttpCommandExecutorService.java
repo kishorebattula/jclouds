@@ -106,10 +106,10 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
                      invokeAsyncInternal(command, finalFuture);
                   else
                      cleanup(nativeRequest);
-                  finalFuture.set(response);
+                  setResultOrException(command, finalFuture, response);
                } else {
                   cleanup(nativeRequest);
-                  finalFuture.set(response);
+                  setResultOrException(command, finalFuture, response);
                }
             }
 
@@ -120,7 +120,6 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
          });
       } catch (Exception e) {
          handleInvokeAsyncFailure(e, command, finalFuture);
-
       }
    }
 
@@ -132,6 +131,14 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       RuntimeException exception = new HttpResponseException(t.getMessage() + " connecting to "
               + command.getCurrentRequest().getRequestLine(), command, null, t);
       future.setException(exception);
+   }
+
+   private void setResultOrException(HttpCommand command, SettableFuture<HttpResponse> future, HttpResponse response) {
+      if (command.getException() != null) {
+         future.setException(command.getException());
+      }
+
+      future.set(response);
    }
 
    @Override

@@ -83,6 +83,16 @@ public interface AsyncBlobStore {
           CreateContainerOptions options);
 
     /**
+     * Determines if a blob exists
+     *
+     * @param container
+     *           container where the blob resides
+     * @param name
+     *           full path to the blob
+     */
+    ListenableFuture<Boolean> blobExists(String container, String name);
+
+    /**
      * Adds a {@code Blob} representing the data at location {@code container/blob.metadata.name}
      *
      * @param container

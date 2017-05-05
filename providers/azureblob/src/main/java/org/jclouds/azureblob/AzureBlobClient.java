@@ -526,6 +526,15 @@ public interface AzureBlobClient extends Closeable {
          @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          @PathParam("name") String name);
 
+   @Async
+   @Named("GetBlobProperties")
+   @HEAD
+   @Fallback(FalseOnKeyNotFound.class)
+   @Path("{container}/{name}")
+   ListenableFuture<Boolean> blobExistsAsync(
+         @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+         @PathParam("name") String name);
+
    /**
     * @throws ContainerNotFoundException if the container is not present.
     */

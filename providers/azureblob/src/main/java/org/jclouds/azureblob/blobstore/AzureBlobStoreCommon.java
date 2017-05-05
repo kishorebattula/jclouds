@@ -17,6 +17,54 @@
 
 package org.jclouds.azureblob.blobstore;
 
-public class AzureBlobStoreCommon {
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.BaseEncoding;
+import com.google.common.primitives.Ints;
+import org.jclouds.azureblob.domain.AzureBlob;
+import org.jclouds.blobstore.domain.BlobMetadata;
+import org.jclouds.blobstore.domain.MultipartPart;
+import org.jclouds.blobstore.domain.MultipartUpload;
+import org.jclouds.blobstore.options.PutOptions;
+import org.jclouds.io.MutableContentMetadata;
 
+import java.util.List;
+import java.util.UUID;
+
+class AzureBlobStoreCommon {
+    static MultipartUpload initiateMultipartUpload(String container, BlobMetadata blobMetadata,
+          PutOptions options) {
+        String uploadId = UUID.randomUUID().toString();
+        return MultipartUpload.create(container, blobMetadata.getName(), uploadId, blobMetadata, options);
+    }
+
+    static AzureBlob prepareDummyBlobForMultipartComplete(MultipartUpload mpu, AzureBlob azureBlob) {
+        // fake values to satisfy BindAzureBlobMetadataToMultipartRequest
+        azureBlob.setPayload(new byte[0]);
+        azureBlob.getProperties().setContainer(mpu.containerName());
+        azureBlob.getProperties().setName(mpu.blobName());
+
+        azureBlob.getProperties().setContentMetadata((MutableContentMetadata) mpu.blobMetadata().getContentMetadata());
+        azureBlob.getProperties().setMetadata(mpu.blobMetadata().getUserMetadata());
+        return azureBlob;
+    }
+
+    static List<String> prepareBlockList(List<MultipartPart> parts) {
+        ImmutableList.Builder<String> blocks = ImmutableList.builder();
+        for (MultipartPart part : parts) {
+            String blockId = BaseEncoding.base64().encode(Ints.toByteArray(part.partNumber()));
+            blocks.add(blockId);
+        }
+
+        return blocks.build();
+    }
+
+    static String prepareBlockId(int partNumber) {
+        return BaseEncoding.base64().encode(Ints.toByteArray(partNumber));
+    }
+
+    static MultipartPart prepareMultipartResponse(int partNumber) {
+        String eTag = "";  // putBlock does not return ETag
+        long partSize = -1;  // TODO: how to get this from payload?
+        return MultipartPart.create(partNumber, partSize, eTag);
+    }
 }
