@@ -74,15 +74,13 @@ public abstract class BaseBlobStore extends AbstractBlobStore implements BlobSto
 
    protected final Supplier<Location> defaultLocation;
    protected final Supplier<Set<? extends Location>> locations;
-   protected final PayloadSlicer slicer;
 
    @Inject
    protected BaseBlobStore(BlobStoreContext context, BlobUtils blobUtils, Supplier<Location> defaultLocation,
          @Memoized Supplier<Set<? extends Location>> locations, PayloadSlicer slicer) {
-      super(context, blobUtils);
+      super(context, blobUtils, slicer);
       this.defaultLocation = checkNotNull(defaultLocation, "defaultLocation");
       this.locations = checkNotNull(locations, "locations");
-      this.slicer = checkNotNull(slicer, "slicer");
    }
 
    @Override

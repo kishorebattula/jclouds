@@ -104,6 +104,22 @@ public interface AsyncBlobStore {
     ListenableFuture<String> putBlob(String container, Blob blob);
 
     /**
+     * Adds a {@code Blob} representing the data at location {@code container/blob.metadata.name}
+     * options using multipart strategies.
+     *
+     * @param container
+     *           container to place the blob.
+     * @param blob
+     *           fully qualified name relative to the container.
+     * @param options
+     *           byte range options
+     * @return etag of the blob you uploaded, possibly null where etags are unsupported
+     * @throws ContainerNotFoundException
+     *            if the container doesn't exist
+     */
+    ListenableFuture<String> putBlob(String container, Blob blob, PutOptions options);
+
+    /**
      * Retrieves a {@code Blob} representing the data at location {@code container/name}
      *
      * @param container
@@ -148,4 +164,13 @@ public interface AsyncBlobStore {
 
     @Beta
     ListenableFuture<List<MultipartPart>> listMultipartUpload(MultipartUpload mpu);
+
+    @Beta
+    long getMinimumMultipartPartSize();
+
+    @Beta
+    long getMaximumMultipartPartSize();
+
+    @Beta
+    int getMaximumNumberOfParts();
 }

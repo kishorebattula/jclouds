@@ -32,6 +32,7 @@ import org.jclouds.azureblob.domain.ListBlobBlocksResponse;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.KeyNotFoundException;
 import org.jclouds.blobstore.domain.Blob;
+import org.jclouds.blobstore.domain.BlobAccess;
 import org.jclouds.blobstore.domain.BlobMetadata;
 import org.jclouds.blobstore.domain.MultipartPart;
 import org.jclouds.blobstore.domain.MultipartUpload;
@@ -43,6 +44,7 @@ import org.jclouds.blobstore.util.BlobUtils;
 import org.jclouds.domain.Location;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.Payload;
+import org.jclouds.io.PayloadSlicer;
 
 import java.util.List;
 
@@ -57,9 +59,10 @@ public class AsyncAzureBlobStore extends AsyncBaseBlobStore {
     @Inject
     AsyncAzureBlobStore(BlobStoreContext context, BlobUtils blobUtils, AzureBlobClient client,
        BlobToAzureBlob blob2AzureBlob, AzureBlobToBlob azureBlob2Blob, BlobToHttpGetOptions blob2ObjectGetOptions,
+       PayloadSlicer slicer,
        CreateContainerOptionsToAzureCreateContainerOptions createContainerOptionsToAzureContainerOptions,
        AzureListBlobBlocksResponseToMultipartList azureListBlobBlocksResponseToMultipartList) {
-        super(context, blobUtils);
+        super(context, blobUtils, slicer);
         this.client = client;
         this.blob2AzureBlob = blob2AzureBlob;
         this.azureBlob2Blob = azureBlob2Blob;
@@ -116,6 +119,19 @@ public class AsyncAzureBlobStore extends AsyncBaseBlobStore {
     }
 
     @Override
+    public ListenableFuture<String> putBlob(String container, Blob blob, PutOptions options) {
+        if (options.getBlobAccess() != BlobAccess.PRIVATE) {
+            throw new UnsupportedOperationException("blob access not supported by Azure");
+        }
+
+        if (options.isMultipart()) {
+            return putMultipartBlob(container, blob, options);
+        }
+
+        return putBlob(container, blob);
+    }
+
+    @Override
     public ListenableFuture<Blob> getBlob(String container, String key,
         org.jclouds.blobstore.options.GetOptions options) {
         GetOptions azureOptions = blob2ObjectGetOptions.apply(options);
@@ -162,5 +178,20 @@ public class AsyncAzureBlobStore extends AsyncBaseBlobStore {
         }
 
         return Futures.transform(response, azureListBlobBlocksResponseToMultipartList);
+    }
+
+    @Override
+    public long getMinimumMultipartPartSize() {
+        return AzureBlobStoreCommon.MINIMUM_MULTIPART_SIZE;
+    }
+
+    @Override
+    public long getMaximumMultipartPartSize() {
+        return AzureBlobStoreCommon.MAXIMUM_MULTIPART_SIZE;
+    }
+
+    @Override
+    public int getMaximumNumberOfParts() {
+        return AzureBlobStoreCommon.MAXIMUM_NUMBER_OF_PARTS;
     }
 }

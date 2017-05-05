@@ -19,15 +19,18 @@ package org.jclouds.blobstore.internal;
 
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.util.BlobUtils;
+import org.jclouds.io.PayloadSlicer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 abstract class AbstractBlobStore {
     protected final BlobStoreContext context;
     protected final BlobUtils blobUtils;
+    protected final PayloadSlicer slicer;
 
-    protected AbstractBlobStore(BlobStoreContext context, BlobUtils blobUtils) {
+    protected AbstractBlobStore(BlobStoreContext context, BlobUtils blobUtils, PayloadSlicer slicer) {
         this.context = checkNotNull(context, "context");
         this.blobUtils = checkNotNull(blobUtils, "blobUtils");
+        this.slicer = checkNotNull(slicer, "slicer");
     }
 }

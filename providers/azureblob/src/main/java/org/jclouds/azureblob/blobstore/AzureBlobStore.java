@@ -466,17 +466,17 @@ public class AzureBlobStore extends BaseBlobStore {
 
    @Override
    public long getMinimumMultipartPartSize() {
-      return 1;
+      return AzureBlobStoreCommon.MINIMUM_MULTIPART_SIZE;
    }
 
    @Override
    public long getMaximumMultipartPartSize() {
-      return 100 * 1024 * 1024;
+      return AzureBlobStoreCommon.MAXIMUM_MULTIPART_SIZE;
    }
 
    @Override
    public int getMaximumNumberOfParts() {
-      return 50 * 1000;
+      return AzureBlobStoreCommon.MAXIMUM_NUMBER_OF_PARTS;
    }
 
    @Override

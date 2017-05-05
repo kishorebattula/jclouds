@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.UUID;
 
 class AzureBlobStoreCommon {
+    static final long MINIMUM_MULTIPART_SIZE = 1;
+    static final long MAXIMUM_MULTIPART_SIZE = 100 * 1024 * 1024;
+    static final int MAXIMUM_NUMBER_OF_PARTS = 50 * 1000;
     static MultipartUpload initiateMultipartUpload(String container, BlobMetadata blobMetadata,
           PutOptions options) {
         String uploadId = UUID.randomUUID().toString();
