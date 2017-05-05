@@ -193,10 +193,7 @@ public class RegionScopedSwiftBlobStore implements BlobStore {
       }
       return api.getContainerApi(regionId).create(container, BASIC_CONTAINER);
    }
-   @Override
-   public ListenableFuture<String> putBlobAsync(String container, Blob blob) {
-      throw new UnsupportedOperationException("unsupported operation");
-   }
+   
    @Override
    public ContainerAccess getContainerAccess(String name) {
       Container container = api.getContainerApi(regionId).get(name);
