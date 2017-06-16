@@ -88,7 +88,6 @@ public abstract class ForwardingBlobStore extends ForwardingObject
          String container) {
       return delegate().createContainerInLocation(location, container);
    }
-
    @Override
    public boolean createContainerInLocation(Location location,
          String container, CreateContainerOptions createContainerOptions) {

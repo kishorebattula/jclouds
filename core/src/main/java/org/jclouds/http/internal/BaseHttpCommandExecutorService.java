@@ -48,6 +48,10 @@ import org.jclouds.logging.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandExecutorService {
    protected final HttpUtils utils;
@@ -66,7 +70,6 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
    protected final HttpWire wire;
 
    private final Set<String> idempotentMethods;
-
    @Inject
    protected BaseHttpCommandExecutorService(HttpUtils utils, ContentMetadataCodec contentMetadataCodec,
          DelegatingRetryHandler retryHandler, IOExceptionRetryHandler ioRetryHandler,
@@ -80,6 +83,56 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       this.wire = checkNotNull(wire, "wire");
       this.idempotentMethods = ImmutableSet.copyOf(idempotentMethods.split(","));
    }
+   @Override
+   public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command){
+      SettableFuture<HttpResponse> finalFuture = SettableFuture.create();
+      this.invokeAsyncInternal(command, finalFuture);
+      return finalFuture;
+   }
+
+   private void invokeAsyncInternal(final HttpCommand command, final SettableFuture<HttpResponse> finalFuture) {
+      ListenableFuture<HttpResponse> future = null;
+      try {
+         final HttpRequest request = command.getCurrentRequest();
+         final Q nativeRequest = getNativeRequest(request);
+         future = invokeAsync(nativeRequest);
+         Futures.addCallback(future, new FutureCallback<HttpResponse>() {
+            @Override
+            public void onSuccess(HttpResponse response) {
+               logResponse(request, response);
+               int statusCode = response.getStatusCode();
+               if (statusCode >= 300) {
+                  if (shouldContinue(command, response))
+                     invokeAsyncInternal(command, finalFuture);
+                  else
+                     cleanup(nativeRequest);
+                  finalFuture.set(response);
+               } else {
+                  cleanup(nativeRequest);
+                  finalFuture.set(response);
+               }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+               handleInvokeAsyncFailure(t, command, finalFuture);
+            }
+         });
+      } catch (Exception e) {
+         handleInvokeAsyncFailure(e, command, finalFuture);
+
+      }
+   }
+
+   private void handleInvokeAsyncFailure(Throwable t, HttpCommand command, SettableFuture<HttpResponse> future) {
+      IOException ioe = getFirstThrowableOfType(t, IOException.class);
+      if (ioe != null && shouldContinue(command, ioe)) {
+         invokeAsync(command);
+      }
+      RuntimeException exception = new HttpResponseException(t.getMessage() + " connecting to "
+              + command.getCurrentRequest().getRequestLine(), command, null, t);
+      future.setException(exception);
+   }
 
    @Override
    public HttpResponse invoke(HttpCommand command) {
@@ -88,17 +141,8 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
          HttpRequest request = command.getCurrentRequest();
          Q nativeRequest = null;
          try {
-            for (HttpRequestFilter filter : request.getFilters()) {
-               request = filter.filter(request);
-            }
-            checkRequestHasContentLengthOrChunkedEncoding(request,
-                  "After filtering, the request has neither chunked encoding nor content length: " + request);
-            logger.debug("Sending request %s: %s", request.hashCode(), request.getRequestLine());
-            wirePayloadIfEnabled(wire, request);
-            utils.logRequest(headerLog, request, ">>");
-            nativeRequest = convert(request);
+            nativeRequest = getNativeRequest(request);
             response = invoke(nativeRequest);
-
             logger.debug("Receiving response %s: %s", request.hashCode(), response.getStatusLine());
             utils.logResponse(headerLog, response, "<<");
             if (response.getPayload() != null && wire.enabled())
@@ -129,6 +173,25 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       if (command.getException() != null)
          throw propagate(command.getException());
       return response;
+   }
+
+   private Q getNativeRequest(HttpRequest request) throws Exception {
+      for (HttpRequestFilter filter : request.getFilters()) {
+         request = filter.filter(request);
+      }
+      checkRequestHasContentLengthOrChunkedEncoding(request,
+              "After filtering, the request has neither chunked encoding nor content length: " + request);
+      logger.debug("Sending request %s: %s", request.hashCode(), request.getRequestLine());
+      wirePayloadIfEnabled(wire, request);
+      utils.logRequest(headerLog, request, ">>");
+      return convert(request);
+   }
+
+   private void logResponse(HttpRequest request, HttpResponse response) {
+      logger.debug("Receiving response %s: %s", request.hashCode(), response.getStatusLine());
+      utils.logResponse(headerLog, response, "<<");
+      if (response.getPayload() != null && wire.enabled())
+         wire.input(response);
    }
 
    @VisibleForTesting
@@ -172,6 +235,8 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
    protected abstract Q convert(HttpRequest request) throws IOException, InterruptedException;
 
    protected abstract HttpResponse invoke(Q nativeRequest) throws IOException, InterruptedException;
+
+   protected abstract ListenableFuture<HttpResponse> invokeAsync(Q nativeRequest);
 
    protected abstract void cleanup(Q nativeRequest);
 

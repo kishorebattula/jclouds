@@ -21,7 +21,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.google.common.base.Optional;
+import com.google.inject.Binding;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import org.jclouds.Context;
+import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -36,18 +41,26 @@ import com.google.common.reflect.TypeToken;
 @Singleton
 public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
    private final BlobStore blobStore;
+   private final AsyncBlobStore asyncBlobStore;
    private final ConsistencyModel consistencyModel;
    private final Utils utils;
    private final BlobRequestSigner blobRequestSigner;
 
    @Inject
    public BlobStoreContextImpl(@Provider Context backend, @Provider TypeToken<? extends Context> backendType,
-         Utils utils, ConsistencyModel consistencyModel, BlobStore blobStore, BlobRequestSigner blobRequestSigner) {
+         Utils utils, ConsistencyModel consistencyModel, BlobStore blobStore, BlobRequestSigner blobRequestSigner,
+         Injector injector) {
       super(backend, backendType);
       this.consistencyModel = checkNotNull(consistencyModel, "consistencyModel");
       this.blobStore = checkNotNull(blobStore, "blobStore");
       this.utils = checkNotNull(utils, "utils");
       this.blobRequestSigner = checkNotNull(blobRequestSigner, "blobRequestSigner");
+      Binding<AsyncBlobStore> asyncBlobStoreBinding = injector.getExistingBinding(Key.get(AsyncBlobStore.class));
+      if (asyncBlobStoreBinding != null) {
+         asyncBlobStore = asyncBlobStoreBinding.getProvider().get();
+      } else {
+         asyncBlobStore = null;
+      }
    }
 
    @Override
@@ -58,6 +71,11 @@ public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
    @Override
    public BlobStore getBlobStore() {
       return blobStore;
+   }
+
+   @Override
+   public Optional<AsyncBlobStore> getAsyncBlobStore() {
+      return asyncBlobStore == null ? Optional.<AsyncBlobStore>absent(): Optional.of(asyncBlobStore);
    }
 
    @Override

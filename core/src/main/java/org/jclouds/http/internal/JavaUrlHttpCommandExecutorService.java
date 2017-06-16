@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableMultimap.Builder;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingOutputStream;
 import com.google.inject.Inject;
+import com.google.common.util.concurrent.ListenableFuture;
 
 @Singleton
 public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorService<HttpURLConnection> {
@@ -124,6 +125,11 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
       }
       builder.headers(filterOutContentHeaders(headers));
       return builder.build();
+   }
+
+   @Override
+   protected ListenableFuture<HttpResponse> invokeAsync(final HttpURLConnection nativeRequest) {
+      throw new UnsupportedOperationException("unsupported operation");
    }
 
    @Override

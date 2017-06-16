@@ -33,6 +33,7 @@ import org.jclouds.http.HttpResponse;
 import org.jclouds.logging.Logger;
 import org.jclouds.reflect.Invocation;
 import org.jclouds.rest.InvocationContext;
+import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.config.InvocationConfig;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -40,6 +41,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.Futures;
 
 public class InvokeHttpMethod implements Function<Invocation, Object> {
 
@@ -80,14 +82,18 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
     * if a {@code Throwable} is encountered.
     */
    public Object invoke(Invocation invocation) {
+
       String commandName = config.getCommandName(invocation);
       HttpCommand command = toCommand(commandName, invocation);
       Function<HttpResponse, ?> transformer = getTransformer(commandName, command);
       org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
-
       logger.debug(">> invoking %s", commandName);
       try {
-         return transformer.apply(http.invoke(command));
+         if(invocation.getInvokable().isAnnotationPresent(Async.class)){
+            return Futures.transform(http.invokeAsync(command), transformer);
+         }else{
+            return transformer.apply(http.invoke(command));
+         }
       } catch (Throwable t) {
          try {
             return fallback.createOrPropagate(t);
@@ -187,7 +193,7 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
       logger.trace(">> converting %s", commandName);
       HttpRequest request = annotationProcessor.apply(invocation);
       logger.trace("<< converted %s to %s", commandName, request.getRequestLine());
-      return new HttpCommand(request);
+      return new HttpCommand(request, invocation.getInvokable().isAnnotationPresent(Async.class));
    }
 
    private Function<HttpResponse, ?> getTransformer(String commandName, HttpCommand command) {

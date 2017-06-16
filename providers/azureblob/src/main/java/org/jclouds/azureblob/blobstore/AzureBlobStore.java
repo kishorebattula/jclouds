@@ -80,6 +80,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Ints;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.io.ContentMetadataBuilder;
 import org.jclouds.io.Payload;
 

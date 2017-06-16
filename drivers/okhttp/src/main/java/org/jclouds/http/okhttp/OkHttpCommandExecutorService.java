@@ -57,6 +57,7 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.google.common.util.concurrent.ListenableFuture;
 
 public final class OkHttpCommandExecutorService extends BaseHttpCommandExecutorService<Request> {
    private final Function<URI, Proxy> proxyForURI;
@@ -175,6 +176,11 @@ public final class OkHttpCommandExecutorService extends BaseHttpCommandExecutorS
       builder.headers(filterOutContentHeaders(headers));
 
       return builder.build();
+   }
+
+   @Override
+   protected ListenableFuture<HttpResponse> invokeAsync(final Request nativeRequest) {
+      throw new UnsupportedOperationException("unsupported operation");
    }
 
    @Override

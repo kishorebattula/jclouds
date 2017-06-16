@@ -98,6 +98,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.io.ByteSource;
 import com.google.common.net.HttpHeaders;
+import com.google.common.util.concurrent.ListenableFuture;
 
 @Singleton
 public final class LocalBlobStore implements BlobStore {

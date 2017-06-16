@@ -73,6 +73,7 @@ import org.jclouds.http.functions.ParseETagHeader;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.ContentMetadata;
 import org.jclouds.io.Payload;
+import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.annotations.BinderParam;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Headers;
@@ -85,6 +86,7 @@ import org.jclouds.rest.annotations.SkipEncoding;
 import org.jclouds.rest.annotations.XMLResponseParser;
 
 import com.google.inject.Provides;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /** Provides access to Azure Blob via their REST API.  */
 @RequestFilters(SharedKeyLiteAuthentication.class)
@@ -332,6 +334,17 @@ public interface AzureBlobClient extends Closeable {
    @Headers(keys = EXPECT, values = "100-continue")
    @ResponseParser(ParseETagHeader.class)
    String putBlob(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+         @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
+         AzureBlob object);
+
+   @Named("PutBlob")
+   @Async
+   @PUT
+   @Path("{container}/{name}")
+   @Headers(keys = EXPECT, values = "100-continue")
+   @ResponseParser(ParseETagHeader.class)
+   ListenableFuture<String> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class)
+         String container,
          @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
          AzureBlob object);
 
