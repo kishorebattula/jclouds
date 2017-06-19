@@ -170,7 +170,7 @@ public final class OkHttpCommandExecutorService extends BaseHttpCommandExecutorS
          throw Throwables.propagate(ex);
       }
 
-      SettableFuture<Response> responseFuture = SettableFuture.create();
+      final SettableFuture<Response> responseFuture = SettableFuture.create();
       requestScopedClient.newCall(nativeRequest).enqueue(new Callback() {
          @Override
          public void onResponse(Response response) throws IOException {
