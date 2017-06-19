@@ -75,7 +75,7 @@ public class BlobStoreContextImpl extends BaseView implements BlobStoreContext {
 
    @Override
    public Optional<AsyncBlobStore> getAsyncBlobStore() {
-      return asyncBlobStore == null ? Optional.<AsyncBlobStore>absent(): Optional.of(asyncBlobStore);
+      return asyncBlobStore == null ? Optional.<AsyncBlobStore>absent() : Optional.of(asyncBlobStore);
    }
 
    @Override

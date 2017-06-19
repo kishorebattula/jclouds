@@ -29,11 +29,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.base.Supplier;
-import com.google.inject.Provider;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
@@ -150,8 +148,7 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
                                    .headers(filterOutContentHeaders(headers)).build();
    }
 
-   private org.apache.http.HttpResponse executeRequest(HttpUriRequest nativeRequest) throws IOException,
-         ClientProtocolException {
+   private org.apache.http.HttpResponse executeRequest(HttpUriRequest nativeRequest) throws IOException {
       URI endpoint = URI.create(nativeRequest.getRequestLine().getUri());
       HttpHost host = new HttpHost(endpoint.getHost(), endpoint.getPort(), endpoint.getScheme());
       org.apache.http.HttpResponse nativeResponse = client.execute(host, nativeRequest);

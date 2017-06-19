@@ -16,22 +16,12 @@
  */
 package org.jclouds.http.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Throwables.propagate;
-import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
-import static org.jclouds.http.HttpUtils.checkRequestHasContentLengthOrChunkedEncoding;
-import static org.jclouds.http.HttpUtils.releasePayload;
-import static org.jclouds.http.HttpUtils.wirePayloadIfEnabled;
-import static org.jclouds.util.Throwables2.getFirstThrowableOfType;
-
-import java.io.IOException;
-import java.net.ProtocolException;
-import java.util.Set;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.jclouds.Constants;
 import org.jclouds.http.HttpCommand;
 import org.jclouds.http.HttpCommandExecutorService;
@@ -46,12 +36,20 @@ import org.jclouds.http.handlers.DelegatingRetryHandler;
 import org.jclouds.io.ContentMetadataCodec;
 import org.jclouds.logging.Logger;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.IOException;
+import java.net.ProtocolException;
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Throwables.propagate;
+import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
+import static org.jclouds.http.HttpUtils.checkRequestHasContentLengthOrChunkedEncoding;
+import static org.jclouds.http.HttpUtils.releasePayload;
+import static org.jclouds.http.HttpUtils.wirePayloadIfEnabled;
+import static org.jclouds.util.Throwables2.getFirstThrowableOfType;
 
 public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandExecutorService {
    protected final HttpUtils utils;
@@ -106,10 +104,10 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
                      invokeAsyncInternal(command, finalFuture);
                   else
                      cleanup(nativeRequest);
-                  finalFuture.set(response);
+                  setResultOrException(command, finalFuture, response);
                } else {
                   cleanup(nativeRequest);
-                  finalFuture.set(response);
+                  setResultOrException(command, finalFuture, response);
                }
             }
 
@@ -132,6 +130,14 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       RuntimeException exception = new HttpResponseException(t.getMessage() + " connecting to "
               + command.getCurrentRequest().getRequestLine(), command, null, t);
       future.setException(exception);
+   }
+
+   private void setResultOrException(HttpCommand command, SettableFuture<HttpResponse> future, HttpResponse response) {
+      if (command.getException() != null) {
+         future.setException(command.getException());
+      }
+
+      future.set(response);
    }
 
    @Override
