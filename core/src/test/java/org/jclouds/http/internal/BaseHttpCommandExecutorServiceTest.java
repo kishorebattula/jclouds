@@ -36,6 +36,8 @@ import java.io.InputStream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.jclouds.http.HttpCommand;
@@ -322,6 +324,11 @@ public class BaseHttpCommandExecutorServiceTest {
       @Override
       protected HttpResponse invoke(Object nativeRequest) throws IOException, InterruptedException {
          return null;
+      }
+
+      @Override
+      protected ListenableFuture<HttpResponse> invokeAsync(final Object nativeRequest) {
+         return Futures.immediateFuture(null);
       }
 
       @Override

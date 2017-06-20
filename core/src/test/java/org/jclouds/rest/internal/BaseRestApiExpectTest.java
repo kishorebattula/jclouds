@@ -38,6 +38,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.custommonkey.xmlunit.Diff;
 import org.custommonkey.xmlunit.Difference;
 import org.custommonkey.xmlunit.DifferenceConstants;
@@ -212,6 +215,11 @@ public abstract class BaseRestApiExpectTest<S> {
       @Override
       public HttpResponse invoke(HttpRequest nativeRequest) throws IOException, InterruptedException {
          return fn.apply(nativeRequest);
+      }
+
+      @Override
+      protected ListenableFuture<HttpResponse> invokeAsync(final HttpRequest nativeRequest) {
+         return Futures.immediateFuture(fn.apply(nativeRequest));
       }
    }
 
