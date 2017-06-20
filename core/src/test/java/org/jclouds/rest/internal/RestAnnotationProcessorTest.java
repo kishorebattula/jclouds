@@ -70,6 +70,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.date.DateService;
@@ -266,6 +267,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             callCounter++;
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
+         }
       });
 
       try {
@@ -290,6 +296,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
                   "GET http://howdyboys/testing/testing/thepathparam/client/1/foo HTTP/1.1");
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
+         }
       });
 
       try {
@@ -312,6 +323,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
          public HttpResponse invoke(HttpCommand command) {
             assertEquals(command.getCurrentRequest().getFirstHeaderOrNull("header"), "theheaderparam");
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
          }
       });
 
@@ -337,6 +353,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertTrue(command.getCurrentRequest().getHeaders().get("Accept").contains(APPLICATION_JSON));
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
+         }
       });
 
       try {
@@ -359,6 +380,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
                   APPLICATION_XML);
             assertTrue(command.getCurrentRequest().getHeaders().get("Accept").contains(APPLICATION_XML));
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
          }
 
       });
@@ -384,6 +410,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertTrue(command.getCurrentRequest().getHeaders().get("Accept").contains(APPLICATION_XML));
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
+         }
       });
 
       try {
@@ -403,6 +434,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
          public HttpResponse invoke(HttpCommand command) {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://howdyboys/client/1/foo HTTP/1.1");
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
          }
       });
 
@@ -427,6 +463,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://foo/bar/client/1 HTTP/1.1");
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
+         }
       });
 
       try {
@@ -447,6 +488,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://localhost:1111/client/1 HTTP/1.1");
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
+         }
       });
 
       try {
@@ -466,6 +512,11 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
          public HttpResponse invoke(HttpCommand command) {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://howdyboys/client/1/foo HTTP/1.1");
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command) {
+            return null;
          }
       });
 
