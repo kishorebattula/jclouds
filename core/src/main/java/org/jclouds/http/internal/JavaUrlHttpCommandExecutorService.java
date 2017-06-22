@@ -129,7 +129,8 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
 
    @Override
    protected ListenableFuture<HttpResponse> invokeAsync(final HttpURLConnection nativeRequest) {
-      throw new UnsupportedOperationException("unsupported operation");
+      throw new UnsupportedOperationException("Async calls are not supported. " +
+            "Please use ApacheHC or OkHttp driver");
    }
 
    @Override
