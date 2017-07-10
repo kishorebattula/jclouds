@@ -18,6 +18,7 @@ package org.jclouds.blobstore;
 
 import java.io.Closeable;
 
+import com.google.common.base.Optional;
 import org.jclouds.View;
 import org.jclouds.blobstore.attr.ConsistencyModel;
 import org.jclouds.blobstore.internal.BlobStoreContextImpl;
@@ -42,6 +43,11 @@ public interface BlobStoreContext extends Closeable, View {
     * @return a portable interface for the BlobStore.
     */
    BlobStore getBlobStore();
+
+   /**
+    * @return a portable interface for AsyncBlobStore
+    */
+   Optional<AsyncBlobStore> getAsyncBlobStore();
 
    /**
     * @return best guess at the consistency model used in this BlobStore.

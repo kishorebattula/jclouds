@@ -23,7 +23,9 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Optional;
 import org.jclouds.Context;
+import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
@@ -120,6 +122,11 @@ public class RegionScopedBlobStoreContext extends BaseView implements BlobStoreC
    @Override
    public BlobStore getBlobStore() {
       return getBlobStore(implicitRegionId.get());
+   }
+
+   @Override
+   public Optional<AsyncBlobStore> getAsyncBlobStore() {
+      return Optional.absent();
    }
 
    @Override

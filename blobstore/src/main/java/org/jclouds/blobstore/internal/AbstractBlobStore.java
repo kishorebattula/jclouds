@@ -14,21 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jclouds.http;
 
-import com.google.common.util.concurrent.ListenableFuture;
+package org.jclouds.blobstore.internal;
 
-/**
- * Capable of invoking http commands.
- */
-public interface HttpCommandExecutorService {
+import org.jclouds.blobstore.BlobStoreContext;
+import org.jclouds.blobstore.util.BlobUtils;
+import org.jclouds.io.PayloadSlicer;
 
-   /**
-    * Returns a {@code HttpResponse} from the server which responded to the
-    * {@code command}.
-    */
-   HttpResponse invoke(HttpCommand command);
+import static com.google.common.base.Preconditions.checkNotNull;
 
-   ListenableFuture<HttpResponse> invokeAsync(HttpCommand command);
+abstract class AbstractBlobStore {
+    protected final BlobStoreContext context;
+    protected final BlobUtils blobUtils;
+    protected final PayloadSlicer slicer;
 
+    protected AbstractBlobStore(BlobStoreContext context, BlobUtils blobUtils, PayloadSlicer slicer) {
+        this.context = checkNotNull(context, "context");
+        this.blobUtils = checkNotNull(blobUtils, "blobUtils");
+        this.slicer = checkNotNull(slicer, "slicer");
+    }
 }

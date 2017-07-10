@@ -40,6 +40,7 @@ import com.google.appengine.api.urlfetch.HTTPRequest;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 import com.google.appengine.api.urlfetch.URLFetchService;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Google App Engine version of {@link HttpCommandExecutorService}
@@ -87,5 +88,10 @@ public class GaeHttpCommandExecutorService extends BaseHttpCommandExecutorServic
    @Override
    protected HttpResponse invoke(HTTPRequest request) throws IOException {
       return convert(urlFetchService.fetch(request));
+   }
+
+   @Override
+   protected ListenableFuture<HttpResponse> invokeAsync(final HTTPRequest nativeRequest) {
+      throw new UnsupportedOperationException("unsupported operation");
    }
 }

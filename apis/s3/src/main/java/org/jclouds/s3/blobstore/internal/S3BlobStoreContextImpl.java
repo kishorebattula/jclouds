@@ -30,14 +30,16 @@ import org.jclouds.s3.blobstore.S3BlobStore;
 import org.jclouds.s3.blobstore.S3BlobStoreContext;
 
 import com.google.common.reflect.TypeToken;
+import com.google.inject.Injector;
 
 @Singleton
 public class S3BlobStoreContextImpl extends BlobStoreContextImpl implements S3BlobStoreContext {
 
    @Inject
    public S3BlobStoreContextImpl(@Provider Context backend, @Provider TypeToken<? extends Context> backendType,
-         Utils utils, ConsistencyModel consistencyModel, BlobStore blobStore, BlobRequestSigner blobRequestSigner) {
-      super(backend, backendType, utils, consistencyModel, blobStore, blobRequestSigner);
+         Utils utils, ConsistencyModel consistencyModel, BlobStore blobStore, BlobRequestSigner blobRequestSigner,
+         Injector injector) {
+      super(backend, backendType, utils, consistencyModel, blobStore, blobRequestSigner, injector);
    }
 
    @Override

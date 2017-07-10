@@ -14,21 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jclouds.http;
+package org.jclouds.rest.annotations;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Capable of invoking http commands.
- */
-public interface HttpCommandExecutorService {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-   /**
-    * Returns a {@code HttpResponse} from the server which responded to the
-    * {@code command}.
-    */
-   HttpResponse invoke(HttpCommand command);
-
-   ListenableFuture<HttpResponse> invokeAsync(HttpCommand command);
-
+@Target(METHOD)
+@Retention(RUNTIME)
+public @interface Async {
 }

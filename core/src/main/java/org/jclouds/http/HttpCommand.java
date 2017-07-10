@@ -32,11 +32,17 @@ public class HttpCommand {
    private volatile int failureCount;
    private volatile int redirectCount;
    private volatile Exception exception;
+   private volatile boolean async;
 
-   public HttpCommand(HttpRequest request) {
+   public HttpCommand(HttpRequest request, boolean async) {
       this.request = checkNotNull(request, "request");
       this.failureCount = 0;
       this.redirectCount = 0;
+      this.async = async;
+   }
+
+   public HttpCommand(HttpRequest request) {
+      this(request, false);
    }
 
    /**
@@ -46,6 +52,13 @@ public class HttpCommand {
     */
    public int getFailureCount() {
       return failureCount;
+   }
+
+   /**
+    * @return - true if the command is executed using async handler or false.
+    */
+   public boolean isAsync() {
+      return this.async;
    }
 
    /**
@@ -129,7 +142,7 @@ public class HttpCommand {
    public String toString() {
       if (request instanceof GeneratedHttpRequest) {
          GeneratedHttpRequest gRequest = GeneratedHttpRequest.class.cast(request);
-         return String.format("[method=%s, request=%s]", gRequest.getInvocation(), gRequest.getRequestLine());
+         return String.format("[method=%s, request=%s, async=%s]", gRequest.getInvocation(), gRequest.getRequestLine(), this.isAsync());
       }
       return "[request=" + request.getRequestLine() + "]";
    }

@@ -21,9 +21,11 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 
 import org.jclouds.azureblob.AzureBlobClient;
+import org.jclouds.azureblob.blobstore.AsyncAzureBlobStore;
 import org.jclouds.azureblob.blobstore.AzureBlobRequestSigner;
 import org.jclouds.azureblob.blobstore.AzureBlobStore;
 import org.jclouds.azureblob.domain.PublicAccess;
+import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -41,6 +43,7 @@ public class AzureBlobStoreContextModule extends AbstractModule {
    protected void configure() {
       bind(ConsistencyModel.class).toInstance(ConsistencyModel.STRICT);
       bind(BlobStore.class).to(AzureBlobStore.class).in(Scopes.SINGLETON);
+      bind(AsyncBlobStore.class).to(AsyncAzureBlobStore.class).in(Scopes.SINGLETON);
       bind(BlobRequestSigner.class).to(AzureBlobRequestSigner.class);
    }
 

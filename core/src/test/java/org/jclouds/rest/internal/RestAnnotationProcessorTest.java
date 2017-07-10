@@ -16,60 +16,31 @@
  */
 package org.jclouds.rest.internal;
 
-import static com.google.common.base.Charsets.UTF_8;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static org.jclouds.io.Payloads.newInputStreamPayload;
-import static org.jclouds.io.Payloads.newStringPayload;
-import static org.jclouds.providers.AnonymousProviderMetadata.forApiOnEndpoint;
-import static org.jclouds.reflect.Reflection2.method;
-import static org.jclouds.util.Strings2.urlEncode;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
-
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
-import javax.inject.Named;
-import javax.inject.Qualifier;
-import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
+import com.google.common.io.Files;
+import com.google.common.net.HttpHeaders;
+import com.google.common.reflect.Invokable;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.inject.AbstractModule;
+import com.google.inject.ConfigurationException;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.TypeLiteral;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.date.DateService;
@@ -134,29 +105,58 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
-import com.google.common.io.Files;
-import com.google.common.net.HttpHeaders;
-import com.google.common.reflect.Invokable;
-import com.google.inject.AbstractModule;
-import com.google.inject.ConfigurationException;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
+import javax.inject.Named;
+import javax.inject.Qualifier;
+import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Encoded;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
+import static com.google.common.base.Charsets.UTF_8;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.jclouds.io.Payloads.newInputStreamPayload;
+import static org.jclouds.io.Payloads.newStringPayload;
+import static org.jclouds.providers.AnonymousProviderMetadata.forApiOnEndpoint;
+import static org.jclouds.reflect.Reflection2.method;
+import static org.jclouds.util.Strings2.urlEncode;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Test(groups = "unit", testName = "RestAnnotationProcessorTest")
 public class RestAnnotationProcessorTest extends BaseRestApiTest {
@@ -266,6 +266,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             callCounter++;
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
+         }
       });
 
       try {
@@ -290,6 +297,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
                   "GET http://howdyboys/testing/testing/thepathparam/client/1/foo HTTP/1.1");
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
+         }
       });
 
       try {
@@ -312,6 +326,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
          public HttpResponse invoke(HttpCommand command) {
             assertEquals(command.getCurrentRequest().getFirstHeaderOrNull("header"), "theheaderparam");
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
          }
       });
 
@@ -337,6 +358,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertTrue(command.getCurrentRequest().getHeaders().get("Accept").contains(APPLICATION_JSON));
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
+         }
       });
 
       try {
@@ -359,6 +387,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
                   APPLICATION_XML);
             assertTrue(command.getCurrentRequest().getHeaders().get("Accept").contains(APPLICATION_XML));
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
          }
 
       });
@@ -384,6 +419,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertTrue(command.getCurrentRequest().getHeaders().get("Accept").contains(APPLICATION_XML));
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
+         }
       });
 
       try {
@@ -403,6 +445,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
          public HttpResponse invoke(HttpCommand command) {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://howdyboys/client/1/foo HTTP/1.1");
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
          }
       });
 
@@ -427,6 +476,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://foo/bar/client/1 HTTP/1.1");
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
+         }
       });
 
       try {
@@ -447,6 +503,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://localhost:1111/client/1 HTTP/1.1");
             return HttpResponse.builder().build();
          }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
+         }
       });
 
       try {
@@ -466,6 +529,13 @@ public class RestAnnotationProcessorTest extends BaseRestApiTest {
          public HttpResponse invoke(HttpCommand command) {
             assertEquals(command.getCurrentRequest().getRequestLine(), "GET http://howdyboys/client/1/foo HTTP/1.1");
             return HttpResponse.builder().build();
+         }
+
+         @Override
+         public ListenableFuture<HttpResponse> invokeAsync(HttpCommand command) {
+            final SettableFuture<HttpResponse> response = SettableFuture.create();
+            response.set(invoke(command));
+            return response;
          }
       });
 

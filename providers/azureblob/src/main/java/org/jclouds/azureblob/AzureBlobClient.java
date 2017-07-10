@@ -73,6 +73,7 @@ import org.jclouds.http.functions.ParseETagHeader;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.ContentMetadata;
 import org.jclouds.io.Payload;
+import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.annotations.BinderParam;
 import org.jclouds.rest.annotations.Fallback;
 import org.jclouds.rest.annotations.Headers;
@@ -85,6 +86,7 @@ import org.jclouds.rest.annotations.SkipEncoding;
 import org.jclouds.rest.annotations.XMLResponseParser;
 
 import com.google.inject.Provides;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /** Provides access to Azure Blob via their REST API.  */
 @RequestFilters(SharedKeyLiteAuthentication.class)
@@ -131,6 +133,16 @@ public interface AzureBlobClient extends Closeable {
    boolean createContainer(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          CreateContainerOptions... options);
 
+   @Async
+   @Named("CreateContainer")
+   @PUT
+   @Path("{container}")
+   @Fallback(FalseIfContainerAlreadyExists.class)
+   @QueryParams(keys = "restype", values = "container")
+   ListenableFuture<Boolean> createContainerAsync(
+        @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+        CreateContainerOptions... options);
+
 
    /**
     * The Get Container Properties operation returns all user-defined metadata and system properties
@@ -155,6 +167,15 @@ public interface AzureBlobClient extends Closeable {
    @QueryParams(keys = "restype", values = "container")
    @Fallback(FalseOnContainerNotFound.class)
    boolean containerExists(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container);
+
+   @Async
+   @Named("GetContainerProperties")
+   @HEAD
+   @Path("{container}")
+   @QueryParams(keys = "restype", values = "container")
+   @Fallback(FalseOnContainerNotFound.class)
+   ListenableFuture<Boolean> containerExistsAsync(
+         @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container);
 
    /**
     * The Set Container Metadata operation sets one or more user-defined name/value pairs for the
@@ -335,6 +356,17 @@ public interface AzureBlobClient extends Closeable {
          @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
          AzureBlob object);
 
+   @Named("PutBlob")
+   @Async
+   @PUT
+   @Path("{container}/{name}")
+   @Headers(keys = EXPECT, values = "100-continue")
+   @ResponseParser(ParseETagHeader.class)
+   ListenableFuture<String> putBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class)
+         String container,
+         @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToRequest.class)
+         AzureBlob object);
+
 
    /**
     * The Get Blob operation reads or downloads a blob from the system, including its metadata and
@@ -348,6 +380,15 @@ public interface AzureBlobClient extends Closeable {
    AzureBlob getBlob(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          @PathParam("name") String name, GetOptions... options);
 
+   @Async
+   @Named("GetBlob")
+   @GET
+   @ResponseParser(ParseBlobFromHeadersAndHttpContent.class)
+   @Fallback(NullOnKeyNotFound.class)
+   @Path("{container}/{name}")
+   ListenableFuture<AzureBlob> getBlobAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+         @PathParam("name") String name, GetOptions... options);
+
    /**
     *  The Put Block operation creates a block blob on Azure which can be later assembled into
     *  a single, large blob object with the Put Block List operation.
@@ -357,6 +398,15 @@ public interface AzureBlobClient extends Closeable {
    @Path("{container}/{name}")
    @QueryParams(keys = { "comp" }, values = { "block" })
    void putBlock(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+         @PathParam("name") String name,
+         @QueryParam("blockid") @ParamValidators(BlockIdValidator.class) String blockId, Payload part);
+
+   @Async
+   @Named("PutBlock")
+   @PUT
+   @Path("{container}/{name}")
+   @QueryParams(keys = { "comp" }, values = { "block" })
+   void putBlockAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          @PathParam("name") String name,
          @QueryParam("blockid") @ParamValidators(BlockIdValidator.class) String blockId, Payload part);
 
@@ -392,12 +442,32 @@ public interface AzureBlobClient extends Closeable {
          @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToMultipartRequest.class) AzureBlob object,
          @BinderParam(BindAzureBlocksToRequest.class) List<String> blockIdList);
 
+   @Async
+   @Named("PutBlockList")
+   @PUT
+   @Path("{container}/{name}")
+   @ResponseParser(ParseETagHeader.class)
+   @QueryParams(keys = { "comp" }, values = { "blocklist" })
+   ListenableFuture<String> putBlockListAsync(@PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+        @PathParam("name") @ParamParser(BlobName.class) @BinderParam(BindAzureBlobMetadataToMultipartRequest.class) AzureBlob object,
+        @BinderParam(BindAzureBlocksToRequest.class) List<String> blockIdList);
+
    @Named("GetBlockList")
    @GET
    @Path("{container}/{name}")
    @XMLResponseParser(BlobBlocksResultsHandler.class)
    @QueryParams(keys = { "comp", "blocklisttype" }, values = { "blocklist", "all" })
    ListBlobBlocksResponse getBlockList(
+         @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+         @PathParam("name") String name);
+
+   @Async
+   @Named("GetBlockList")
+   @GET
+   @Path("{container}/{name}")
+   @XMLResponseParser(BlobBlocksResultsHandler.class)
+   @QueryParams(keys = { "comp", "blocklisttype" }, values = { "blocklist", "all" })
+   ListenableFuture<ListBlobBlocksResponse> getBlockListAsync(
          @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          @PathParam("name") String name);
 
@@ -453,6 +523,15 @@ public interface AzureBlobClient extends Closeable {
    @Fallback(FalseOnKeyNotFound.class)
    @Path("{container}/{name}")
    boolean blobExists(
+         @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
+         @PathParam("name") String name);
+
+   @Async
+   @Named("GetBlobProperties")
+   @HEAD
+   @Fallback(FalseOnKeyNotFound.class)
+   @Path("{container}/{name}")
+   ListenableFuture<Boolean> blobExistsAsync(
          @PathParam("container") @ParamValidators(ContainerNameValidator.class) String container,
          @PathParam("name") String name);
 

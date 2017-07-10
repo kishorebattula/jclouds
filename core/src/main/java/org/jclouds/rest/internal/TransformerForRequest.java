@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.lang.model.type.NullType;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.jclouds.functions.IdentityFunction;
 import org.jclouds.functions.OnlyElementOrNull;
 import org.jclouds.http.HttpRequest;
@@ -110,22 +111,23 @@ public class TransformerForRequest implements Function<HttpRequest, Function<Htt
       Set<String> acceptHeaders = getAcceptHeaders.apply(invocation);
       ResponseParser annotation = invoked.getAnnotation(ResponseParser.class);
       Class<?> rawReturnType = invoked.getReturnType().getRawType();
+      TypeToken returnType = invoked.getReturnType();
       if (annotation == null) {
-         if (rawReturnType.equals(void.class)) {
+         if (rawReturnType.equals(void.class) || returnType.equals(new TypeToken<ListenableFuture<Void>>() {})) {
             return Key.get(ReleasePayloadAndReturn.class);
-         } else if (rawReturnType.equals(boolean.class) || rawReturnType.equals(Boolean.class)) {
+         } else if (rawReturnType.equals(boolean.class) || rawReturnType.equals(Boolean.class) || returnType.equals(new TypeToken<ListenableFuture<Boolean>>() {})) {
             return Key.get(ReturnTrueIf2xx.class);
-         } else if (rawReturnType.equals(InputStream.class)) {
+         } else if (rawReturnType.equals(InputStream.class) || returnType.equals(new TypeToken<ListenableFuture<InputStream>>() {})) {
             return Key.get(ReturnInputStream.class);
-         } else if (rawReturnType.equals(HttpResponse.class)) {
+         } else if (rawReturnType.equals(HttpResponse.class) || returnType.equals(new TypeToken<ListenableFuture<HttpResponse>>() {})) {
             return Key.get(Class.class.cast(IdentityFunction.class));
          } else if (acceptHeaders.contains(APPLICATION_JSON)) {
             return getJsonParserKeyForMethod(invoked);
          } else if (acceptHeaders.contains(APPLICATION_XML) || invoked.isAnnotationPresent(JAXBResponseParser.class)) {
             return getJAXBParserKeyForMethod(invoked);
-         } else if (rawReturnType.equals(String.class)) {
+         } else if (rawReturnType.equals(String.class) || returnType.equals(new TypeToken<ListenableFuture<String>>() {})) {
             return Key.get(ReturnStringIf2xx.class);
-         } else if (rawReturnType.equals(URI.class)) {
+         } else if (rawReturnType.equals(URI.class) || returnType.equals(new TypeToken<ListenableFuture<URI>>() {})) {
             return Key.get(ParseURIFromListOrLocationHeaderIf20x.class);
          } else {
             throw new IllegalStateException("You must specify a ResponseParser annotation on: " + invoked.toString());

@@ -14,21 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jclouds.http;
 
-import com.google.common.util.concurrent.ListenableFuture;
+package org.jclouds.azureblob.blobstore.functions;
 
-/**
- * Capable of invoking http commands.
- */
-public interface HttpCommandExecutorService {
+import com.google.common.base.Function;
+import org.jclouds.azureblob.domain.PublicAccess;
+import org.jclouds.blobstore.options.CreateContainerOptions;
 
-   /**
-    * Returns a {@code HttpResponse} from the server which responded to the
-    * {@code command}.
-    */
-   HttpResponse invoke(HttpCommand command);
-
-   ListenableFuture<HttpResponse> invokeAsync(HttpCommand command);
-
+public class CreateContainerOptionsToAzureCreateContainerOptions implements
+      Function<CreateContainerOptions, org.jclouds.azureblob.options.CreateContainerOptions> {
+    @Override
+    public org.jclouds.azureblob.options.CreateContainerOptions apply(CreateContainerOptions input) {
+        org.jclouds.azureblob.options.CreateContainerOptions createContainerOptions = new org.jclouds.azureblob.options.CreateContainerOptions();
+        if (input.isPublicRead())
+            createContainerOptions.withPublicAccess(PublicAccess.CONTAINER);
+        return createContainerOptions;
+    }
 }

@@ -34,13 +34,14 @@ import javax.inject.Singleton;
 import org.jclouds.azure.storage.domain.BoundedSet;
 import org.jclouds.azureblob.AzureBlobClient;
 import org.jclouds.azureblob.blobstore.functions.AzureBlobToBlob;
+import org.jclouds.azureblob.blobstore.functions.AzureListBlobBlocksResponseToMultipartList;
 import org.jclouds.azureblob.blobstore.functions.BlobPropertiesToBlobMetadata;
 import org.jclouds.azureblob.blobstore.functions.BlobToAzureBlob;
 import org.jclouds.azureblob.blobstore.functions.ContainerToResourceMetadata;
+import org.jclouds.azureblob.blobstore.functions.CreateContainerOptionsToAzureCreateContainerOptions;
 import org.jclouds.azureblob.blobstore.functions.ListBlobsResponseToResourceList;
 import org.jclouds.azureblob.blobstore.functions.ListOptionsToListBlobsOptions;
 import org.jclouds.azureblob.domain.AzureBlob;
-import org.jclouds.azureblob.domain.BlobBlockProperties;
 import org.jclouds.azureblob.domain.BlobProperties;
 import org.jclouds.azureblob.domain.ContainerProperties;
 import org.jclouds.azureblob.domain.ListBlobBlocksResponse;
@@ -71,15 +72,12 @@ import org.jclouds.collect.Memoized;
 import org.jclouds.domain.Location;
 import org.jclouds.http.options.GetOptions;
 import org.jclouds.io.ContentMetadata;
-import org.jclouds.io.MutableContentMetadata;
 import org.jclouds.io.PayloadSlicer;
 
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.BaseEncoding;
-import com.google.common.primitives.Ints;
 import org.jclouds.io.ContentMetadataBuilder;
 import org.jclouds.io.Payload;
 
@@ -93,6 +91,8 @@ public class AzureBlobStore extends BaseBlobStore {
    private final BlobToAzureBlob blob2AzureBlob;
    private final BlobPropertiesToBlobMetadata blob2BlobMd;
    private final BlobToHttpGetOptions blob2ObjectGetOptions;
+   private final CreateContainerOptionsToAzureCreateContainerOptions createContainerOptionsToAzureContainerOptions;
+   private final AzureListBlobBlocksResponseToMultipartList azureListBlobBlocksResponseToMultipartList;
 
 
    @Inject
@@ -102,7 +102,9 @@ public class AzureBlobStore extends BaseBlobStore {
             ListOptionsToListBlobsOptions blobStore2AzureContainerListOptions,
             ListBlobsResponseToResourceList azure2BlobStoreResourceList, AzureBlobToBlob azureBlob2Blob,
             BlobToAzureBlob blob2AzureBlob, BlobPropertiesToBlobMetadata blob2BlobMd,
-            BlobToHttpGetOptions blob2ObjectGetOptions) {
+            BlobToHttpGetOptions blob2ObjectGetOptions,
+            CreateContainerOptionsToAzureCreateContainerOptions createContainerOptionsToAzureContainerOptions,
+            AzureListBlobBlocksResponseToMultipartList azureListBlobBlocksResponseToMultipartList) {
       super(context, blobUtils, defaultLocation, locations, slicer);
       this.sync = checkNotNull(sync, "sync");
       this.container2ResourceMd = checkNotNull(container2ResourceMd, "container2ResourceMd");
@@ -113,6 +115,8 @@ public class AzureBlobStore extends BaseBlobStore {
       this.blob2AzureBlob = checkNotNull(blob2AzureBlob, "blob2AzureBlob");
       this.blob2BlobMd = checkNotNull(blob2BlobMd, "blob2BlobMd");
       this.blob2ObjectGetOptions = checkNotNull(blob2ObjectGetOptions, "blob2ObjectGetOptions");
+      this.createContainerOptionsToAzureContainerOptions = createContainerOptionsToAzureContainerOptions;
+      this.azureListBlobBlocksResponseToMultipartList = azureListBlobBlocksResponseToMultipartList;
    }
 
    /**
@@ -362,10 +366,7 @@ public class AzureBlobStore extends BaseBlobStore {
 
    @Override
    public boolean createContainerInLocation(Location location, String container, CreateContainerOptions options) {
-      org.jclouds.azureblob.options.CreateContainerOptions createContainerOptions = new org.jclouds.azureblob.options.CreateContainerOptions();
-      if (options.isPublicRead())
-         createContainerOptions.withPublicAccess(PublicAccess.CONTAINER);
-      return sync.createContainer(container, createContainerOptions);
+      return sync.createContainer(container, createContainerOptionsToAzureContainerOptions.apply(options));
    }
 
    @Override
@@ -401,8 +402,7 @@ public class AzureBlobStore extends BaseBlobStore {
 
    @Override
    public MultipartUpload initiateMultipartUpload(String container, BlobMetadata blobMetadata, PutOptions options) {
-      String uploadId = UUID.randomUUID().toString();
-      return MultipartUpload.create(container, blobMetadata.getName(), uploadId, blobMetadata, options);
+      return AzureBlobStoreCommon.initiateMultipartUpload(container, blobMetadata, options);
    }
 
    @Override
@@ -414,30 +414,16 @@ public class AzureBlobStore extends BaseBlobStore {
    @Override
    public String completeMultipartUpload(MultipartUpload mpu, List<MultipartPart> parts) {
       AzureBlob azureBlob = sync.newBlob();
-
-      // fake values to satisfy BindAzureBlobMetadataToMultipartRequest
-      azureBlob.setPayload(new byte[0]);
-      azureBlob.getProperties().setContainer(mpu.containerName());
-      azureBlob.getProperties().setName(mpu.blobName());
-
-      azureBlob.getProperties().setContentMetadata((MutableContentMetadata) mpu.blobMetadata().getContentMetadata());
-      azureBlob.getProperties().setMetadata(mpu.blobMetadata().getUserMetadata());
-
-      ImmutableList.Builder<String> blocks = ImmutableList.builder();
-      for (MultipartPart part : parts) {
-         String blockId = BaseEncoding.base64().encode(Ints.toByteArray(part.partNumber()));
-         blocks.add(blockId);
-      }
-      return sync.putBlockList(mpu.containerName(), azureBlob, blocks.build());
+      azureBlob = AzureBlobStoreCommon.prepareDummyBlobForMultipartComplete(mpu, azureBlob);
+      List<String> blocks = AzureBlobStoreCommon.prepareBlockList(parts);
+      return sync.putBlockList(mpu.containerName(), azureBlob, blocks);
    }
 
    @Override
    public MultipartPart uploadMultipartPart(MultipartUpload mpu, int partNumber, Payload payload) {
-      String blockId = BaseEncoding.base64().encode(Ints.toByteArray(partNumber));
+      String blockId = AzureBlobStoreCommon.prepareBlockId(partNumber);
       sync.putBlock(mpu.containerName(), mpu.blobName(), blockId, payload);
-      String eTag = "";  // putBlock does not return ETag
-      Date lastModified = null;  // putBlob does not return Last-Modified
-      return MultipartPart.create(partNumber, payload.getContentMetadata().getContentLength(), eTag);
+      return AzureBlobStoreCommon.prepareMultipartResponse(partNumber);
    }
 
    @Override
@@ -449,14 +435,7 @@ public class AzureBlobStore extends BaseBlobStore {
          return ImmutableList.<MultipartPart>of();
       }
 
-      ImmutableList.Builder<MultipartPart> parts = ImmutableList.builder();
-      for (BlobBlockProperties properties : response.getBlocks()) {
-         int partNumber = Ints.fromByteArray(BaseEncoding.base64().decode(properties.getBlockName()));
-         String eTag = "";  // getBlockList does not return ETag
-         Date lastModified = null;  // getBlockList does not return LastModified
-         parts.add(MultipartPart.create(partNumber, properties.getContentLength(), eTag, lastModified));
-      }
-      return parts.build();
+      return azureListBlobBlocksResponseToMultipartList.apply(response);
    }
 
    @Override
@@ -488,17 +467,17 @@ public class AzureBlobStore extends BaseBlobStore {
 
    @Override
    public long getMinimumMultipartPartSize() {
-      return 1;
+      return AzureBlobStoreCommon.MINIMUM_MULTIPART_SIZE;
    }
 
    @Override
    public long getMaximumMultipartPartSize() {
-      return 100 * 1024 * 1024;
+      return AzureBlobStoreCommon.MAXIMUM_MULTIPART_SIZE;
    }
 
    @Override
    public int getMaximumNumberOfParts() {
-      return 50 * 1000;
+      return AzureBlobStoreCommon.MAXIMUM_NUMBER_OF_PARTS;
    }
 
    @Override

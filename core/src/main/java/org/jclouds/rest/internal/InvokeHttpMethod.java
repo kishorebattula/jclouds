@@ -26,6 +26,9 @@ import java.util.concurrent.Callable;
 import javax.annotation.Resource;
 import javax.inject.Inject;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.jclouds.http.HttpCommand;
 import org.jclouds.http.HttpCommandExecutorService;
 import org.jclouds.http.HttpRequest;
@@ -33,6 +36,7 @@ import org.jclouds.http.HttpResponse;
 import org.jclouds.logging.Logger;
 import org.jclouds.reflect.Invocation;
 import org.jclouds.rest.InvocationContext;
+import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.config.InvocationConfig;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -40,6 +44,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.Futures;
 
 public class InvokeHttpMethod implements Function<Invocation, Object> {
 
@@ -73,6 +78,36 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
       return invoke(in);
    }
 
+   private ListenableFuture<Object> handleAsyncResponse(ListenableFuture<HttpResponse> future,
+        final Function<HttpResponse, ?> transformer, final org.jclouds.Fallback<?> fallback) {
+      final SettableFuture<Object> finalFuture = SettableFuture.create();
+      Futures.addCallback(future, new FutureCallback<HttpResponse>() {
+         @Override
+         public void onSuccess(HttpResponse result) {
+            try {
+               Object finalResult = transformer.apply(result);
+               finalFuture.set(finalResult);
+            } catch (Exception e) {
+               try {
+                  finalFuture.set(fallback.createOrPropagate(e));
+               } catch (Exception e1) {
+                  finalFuture.setException(e1);
+               }
+            }
+         }
+
+         @Override
+         public void onFailure(Throwable t) {
+            try {
+               finalFuture.set(fallback.createOrPropagate(t));
+            } catch (Exception e) {
+               finalFuture.setException(e);
+            }
+         }
+      });
+      return finalFuture;
+   }
+
    /**
     * invokes the {@linkplain HttpCommand} associated with {@code invocation},
     * {@link #getTransformer(String, HttpCommand) parses its response}, and
@@ -80,14 +115,19 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
     * if a {@code Throwable} is encountered.
     */
    public Object invoke(Invocation invocation) {
+
       String commandName = config.getCommandName(invocation);
       HttpCommand command = toCommand(commandName, invocation);
-      Function<HttpResponse, ?> transformer = getTransformer(commandName, command);
-      org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
-
+      final Function<HttpResponse, ?> transformer = getTransformer(commandName, command);
+      final org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
       logger.debug(">> invoking %s", commandName);
       try {
-         return transformer.apply(http.invoke(command));
+         final SettableFuture<Object> future = SettableFuture.create();
+         if (invocation.getInvokable().isAnnotationPresent(Async.class)) {
+            return handleAsyncResponse(http.invokeAsync(command), transformer, fallback);
+         } else {
+            return transformer.apply(http.invoke(command));
+         }
       } catch (Throwable t) {
          try {
             return fallback.createOrPropagate(t);
@@ -187,7 +227,7 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
       logger.trace(">> converting %s", commandName);
       HttpRequest request = annotationProcessor.apply(invocation);
       logger.trace("<< converted %s to %s", commandName, request.getRequestLine());
-      return new HttpCommand(request);
+      return new HttpCommand(request, invocation.getInvokable().isAnnotationPresent(Async.class));
    }
 
    private Function<HttpResponse, ?> getTransformer(String commandName, HttpCommand command) {
