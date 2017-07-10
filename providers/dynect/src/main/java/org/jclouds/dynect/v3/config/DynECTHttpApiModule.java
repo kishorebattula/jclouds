@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URI;
-import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -59,8 +58,6 @@ import org.jclouds.rest.config.HttpApiModule;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Configures the DynECT connection.
