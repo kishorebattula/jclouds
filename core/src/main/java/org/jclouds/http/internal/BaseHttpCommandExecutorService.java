@@ -102,6 +102,16 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       }
    }
 
+   private ListenableFuture<HttpResponse> wrappedInvoke(Q nativeRequest) {
+      try {
+         return Futures.immediateFuture(this.invoke(nativeRequest));
+      } catch (IOException e) {
+         return Futures.immediateFailedFuture(e);
+      } catch (InterruptedException e) {
+         return Futures.immediateFailedFuture(e);
+      }
+   }
+
    private void invokeInternal(final HttpCommand command, final boolean executeAsync,
            final SettableFuture<HttpResponse> finalFuture) {
       ListenableFuture<HttpResponse> future = null;
@@ -112,7 +122,7 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
          if (executeAsync) {
             future = invokeAsync(nativeRequest);
          } else {
-            future = invoke(nativeRequest);
+            future = wrappedInvoke(nativeRequest);
          }
 
          final Q nativeRequestCopy = nativeRequest;
@@ -224,8 +234,7 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
 
    protected abstract Q convert(HttpRequest request) throws IOException, InterruptedException;
 
-   protected abstract ListenableFuture<HttpResponse> invoke(Q nativeRequest)
-           throws IOException, InterruptedException, ExecutionException;
+   protected abstract HttpResponse invoke(Q nativeRequest) throws IOException, InterruptedException;
 
    protected abstract ListenableFuture<HttpResponse> invokeAsync(Q nativeRequest);
 
