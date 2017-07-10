@@ -32,7 +32,6 @@ import org.jclouds.rest.Utils;
 import org.jclouds.s3.blobstore.internal.S3BlobStoreContextImpl;
 
 import com.google.common.reflect.TypeToken;
-import com.google.inject.Injector;
 
 @Singleton
 public class AWSS3BlobStoreContextImpl extends S3BlobStoreContextImpl implements AWSS3BlobStoreContext {

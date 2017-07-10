@@ -34,8 +34,6 @@ import org.jclouds.filesystem.predicates.validators.internal.FilesystemContainer
 import org.jclouds.filesystem.strategy.internal.FilesystemStorageStrategyImpl;
 import org.jclouds.filesystem.util.internal.FileSystemBlobUtilsImpl;
 
-import com.google.inject.AbstractModule;
-
 public class FilesystemBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
