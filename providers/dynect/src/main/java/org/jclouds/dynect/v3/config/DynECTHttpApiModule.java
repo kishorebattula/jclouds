@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URI;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -58,6 +59,8 @@ import org.jclouds.rest.config.HttpApiModule;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Configures the DynECT connection.
@@ -116,8 +119,9 @@ public class DynECTHttpApiModule extends HttpApiModule<DynECTApi> {
        * synchronized to prevent multiple callers from overlapping requests on the same session
        */
       @Override
-      protected synchronized HttpResponse invoke(HttpURLConnection connection) throws IOException, InterruptedException {
-         HttpResponse response = super.invoke(connection);
+      protected synchronized ListenableFuture<HttpResponse> invoke(HttpURLConnection connection)
+              throws IOException, InterruptedException, ExecutionException {
+         HttpResponse response = super.invoke(connection).get();
          if (response.getStatusCode() == 200) {
             byte[] data = closeClientButKeepContentStream(response);
             String message = data != null ? new String(data, Charsets.UTF_8) : null;
@@ -125,7 +129,7 @@ public class DynECTHttpApiModule extends HttpApiModule<DynECTApi> {
                response = response.toBuilder().statusCode(400).build();
             }
          }
-         return response;
+         return Futures.immediateFuture(response);
       }
    }
 }

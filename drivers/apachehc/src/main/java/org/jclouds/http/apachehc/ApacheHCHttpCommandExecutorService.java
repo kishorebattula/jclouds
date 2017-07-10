@@ -99,9 +99,9 @@ public class ApacheHCHttpCommandExecutorService extends BaseHttpCommandExecutorS
    }
 
    @Override
-   protected HttpResponse invoke(HttpUriRequest nativeRequest) throws IOException {
+   protected ListenableFuture<HttpResponse> invoke(HttpUriRequest nativeRequest) throws IOException {
       org.apache.http.HttpResponse apacheResponse = executeRequest(nativeRequest);
-      return prepareResponse(nativeRequest, apacheResponse);
+      return Futures.immediateFuture(prepareResponse(nativeRequest, apacheResponse));
    }
 
    @Override
