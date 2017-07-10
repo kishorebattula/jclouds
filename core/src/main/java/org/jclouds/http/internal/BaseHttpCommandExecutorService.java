@@ -16,22 +16,12 @@
  */
 package org.jclouds.http.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Throwables.propagate;
-import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
-import static org.jclouds.http.HttpUtils.checkRequestHasContentLengthOrChunkedEncoding;
-import static org.jclouds.http.HttpUtils.releasePayload;
-import static org.jclouds.http.HttpUtils.wirePayloadIfEnabled;
-import static org.jclouds.util.Throwables2.getFirstThrowableOfType;
-
-import java.io.IOException;
-import java.net.ProtocolException;
-import java.util.Set;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.jclouds.Constants;
 import org.jclouds.http.HttpCommand;
 import org.jclouds.http.HttpCommandExecutorService;
@@ -46,12 +36,21 @@ import org.jclouds.http.handlers.DelegatingRetryHandler;
 import org.jclouds.io.ContentMetadataCodec;
 import org.jclouds.logging.Logger;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.IOException;
+import java.net.ProtocolException;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Throwables.propagate;
+import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
+import static org.jclouds.http.HttpUtils.checkRequestHasContentLengthOrChunkedEncoding;
+import static org.jclouds.http.HttpUtils.releasePayload;
+import static org.jclouds.http.HttpUtils.wirePayloadIfEnabled;
+import static org.jclouds.util.Throwables2.getFirstThrowableOfType;
 
 public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandExecutorService {
    protected final HttpUtils utils;
@@ -86,51 +85,76 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
    @Override
    public ListenableFuture<HttpResponse> invokeAsync(final HttpCommand command){
       SettableFuture<HttpResponse> finalFuture = SettableFuture.create();
-      this.invokeAsyncInternal(command, finalFuture);
+      this.invokeInternal(command, true, finalFuture);
       return finalFuture;
    }
 
-   private void invokeAsyncInternal(final HttpCommand command, final SettableFuture<HttpResponse> finalFuture) {
+   @Override
+   public HttpResponse invoke(HttpCommand command) {
+      SettableFuture<HttpResponse> finalFuture = SettableFuture.create();
+      this.invokeInternal(command, false, finalFuture);
+      try {
+         return finalFuture.get();
+      } catch (InterruptedException e) {
+         throw propagate(e.getCause());
+      } catch (ExecutionException e) {
+         throw propagate(e.getCause());
+      }
+   }
+
+   private void invokeInternal(final HttpCommand command, final boolean executeAsync,
+           final SettableFuture<HttpResponse> finalFuture) {
       ListenableFuture<HttpResponse> future = null;
+      Q nativeRequest = null;
       try {
          final HttpRequest request = command.getCurrentRequest();
-         final Q nativeRequest = getNativeRequest(request);
-         future = invokeAsync(nativeRequest);
+         nativeRequest = getNativeRequest(request);
+         if (executeAsync) {
+            future = invokeAsync(nativeRequest);
+         } else {
+            future = invoke(nativeRequest);
+         }
+
+         final Q nativeRequestCopy = nativeRequest;
+
          Futures.addCallback(future, new FutureCallback<HttpResponse>() {
             @Override
             public void onSuccess(HttpResponse response) {
+               logger.debug("Receiving response %s: %s", request.hashCode(), response.getStatusLine());
+               utils.logResponse(headerLog, response, "<<");
+               if (response.getPayload() != null && wire.enabled())
+                  wire.input(response);
                logResponse(request, response);
                int statusCode = response.getStatusCode();
-               if (statusCode >= 300) {
-                  if (shouldContinue(command, response))
-                     invokeAsyncInternal(command, finalFuture);
-                  else
-                     cleanup(nativeRequest);
-                  setResultOrException(command, finalFuture, response);
+               if (statusCode >= 300 && shouldContinue(command, response)) {
+                  invokeInternal(command, executeAsync, finalFuture);
                } else {
-                  cleanup(nativeRequest);
                   setResultOrException(command, finalFuture, response);
                }
             }
 
             @Override
             public void onFailure(Throwable t) {
-               handleInvokeAsyncFailure(t, command, finalFuture);
+               cleanup(nativeRequestCopy);
+               handleInvokeFailure(t, command, executeAsync, finalFuture);
             }
          });
       } catch (Exception e) {
-         handleInvokeAsyncFailure(e, command, finalFuture);
+         cleanup(nativeRequest);
+         handleInvokeFailure(e, command, executeAsync, finalFuture);
       }
    }
 
-   private void handleInvokeAsyncFailure(Throwable t, HttpCommand command, SettableFuture<HttpResponse> future) {
+   private void handleInvokeFailure(Throwable t, HttpCommand command, boolean executeAsync,
+           SettableFuture<HttpResponse> future) {
       IOException ioe = getFirstThrowableOfType(t, IOException.class);
       if (ioe != null && shouldContinue(command, ioe)) {
-         invokeAsync(command);
+         invokeInternal(command, executeAsync, future);
+      } else {
+         RuntimeException exception = new HttpResponseException(t.getMessage() + " connecting to "
+                 + command.getCurrentRequest().getRequestLine(), command, null, t);
+         future.setException(exception);
       }
-      RuntimeException exception = new HttpResponseException(t.getMessage() + " connecting to "
-              + command.getCurrentRequest().getRequestLine(), command, null, t);
-      future.setException(exception);
    }
 
    private void setResultOrException(HttpCommand command, SettableFuture<HttpResponse> future, HttpResponse response) {
@@ -139,47 +163,6 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
       }
 
       future.set(response);
-   }
-
-   @Override
-   public HttpResponse invoke(HttpCommand command) {
-      HttpResponse response = null;
-      for (;;) {
-         HttpRequest request = command.getCurrentRequest();
-         Q nativeRequest = null;
-         try {
-            nativeRequest = getNativeRequest(request);
-            response = invoke(nativeRequest);
-            logger.debug("Receiving response %s: %s", request.hashCode(), response.getStatusLine());
-            utils.logResponse(headerLog, response, "<<");
-            if (response.getPayload() != null && wire.enabled())
-               wire.input(response);
-            nativeRequest = null; // response took ownership of streams
-            int statusCode = response.getStatusCode();
-            if (statusCode >= 300) {
-               if (shouldContinue(command, response))
-                  continue;
-               else
-                  break;
-            } else {
-               break;
-            }
-         } catch (Exception e) {
-            IOException ioe = getFirstThrowableOfType(e, IOException.class);
-            if (ioe != null && shouldContinue(command, ioe)) {
-               continue;
-            }
-            command.setException(new HttpResponseException(e.getMessage() + " connecting to "
-                  + command.getCurrentRequest().getRequestLine(), command, null, e));
-            break;
-
-         } finally {
-            cleanup(nativeRequest);
-         }
-      }
-      if (command.getException() != null)
-         throw propagate(command.getException());
-      return response;
    }
 
    private Q getNativeRequest(HttpRequest request) throws Exception {
@@ -241,7 +224,8 @@ public abstract class BaseHttpCommandExecutorService<Q> implements HttpCommandEx
 
    protected abstract Q convert(HttpRequest request) throws IOException, InterruptedException;
 
-   protected abstract HttpResponse invoke(Q nativeRequest) throws IOException, InterruptedException;
+   protected abstract ListenableFuture<HttpResponse> invoke(Q nativeRequest)
+           throws IOException, InterruptedException, ExecutionException;
 
    protected abstract ListenableFuture<HttpResponse> invokeAsync(Q nativeRequest);
 

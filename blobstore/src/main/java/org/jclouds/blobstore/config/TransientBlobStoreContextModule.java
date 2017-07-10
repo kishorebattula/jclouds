@@ -16,6 +16,7 @@
  */
 package org.jclouds.blobstore.config;
 
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.LocalBlobRequestSigner;
@@ -25,7 +26,7 @@ import org.jclouds.blobstore.attr.ConsistencyModel;
 
 import com.google.inject.AbstractModule;
 
-public class TransientBlobStoreContextModule extends AbstractModule {
+public class TransientBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
    @Override
    protected void configure() {
       install(new BlobStoreObjectModule());

@@ -16,6 +16,7 @@
  */
 package org.jclouds.b2.blobstore.config;
 
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
 import org.jclouds.b2.blobstore.B2BlobStore;
@@ -23,7 +24,7 @@ import org.jclouds.b2.blobstore.B2BlobStore;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
-public final class B2BlobStoreContextModule extends AbstractModule {
+public final class B2BlobStoreContextModule extends BaseBlobStoreServiceContextModule {
    @Override
    protected void configure() {
       bind(ConsistencyModel.class).toInstance(ConsistencyModel.EVENTUAL);

@@ -15,15 +15,21 @@
  * limitations under the License.
  */
 
-package org.jclouds.rest.annotations;
+package org.jclouds.blobstore;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import com.google.common.base.Optional;
+import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-@Target(METHOD)
-@Retention(RUNTIME)
-public @interface Async {
+public abstract class BaseBlobStoreServiceContextModule extends AbstractModule {
+    @Provides
+    @Singleton
+    protected final Optional<AsyncBlobStore> provideAsyncBlobStore(Injector i) {
+        Binding<AsyncBlobStore> binding = i.getExistingBinding(Key.get(AsyncBlobStore.class));
+        return binding == null ? Optional.<AsyncBlobStore> absent() : Optional.of(binding.getProvider().get());
+    }
 }

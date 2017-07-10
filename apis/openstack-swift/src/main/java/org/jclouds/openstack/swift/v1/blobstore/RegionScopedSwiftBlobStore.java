@@ -195,7 +195,7 @@ public class RegionScopedSwiftBlobStore implements BlobStore {
       }
       return api.getContainerApi(regionId).create(container, BASIC_CONTAINER);
    }
-   
+
    @Override
    public ContainerAccess getContainerAccess(String name) {
       Container container = api.getContainerApi(regionId).get(name);

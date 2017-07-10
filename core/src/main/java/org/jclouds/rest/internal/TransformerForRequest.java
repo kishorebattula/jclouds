@@ -115,19 +115,25 @@ public class TransformerForRequest implements Function<HttpRequest, Function<Htt
       if (annotation == null) {
          if (rawReturnType.equals(void.class) || returnType.equals(new TypeToken<ListenableFuture<Void>>() {})) {
             return Key.get(ReleasePayloadAndReturn.class);
-         } else if (rawReturnType.equals(boolean.class) || rawReturnType.equals(Boolean.class) || returnType.equals(new TypeToken<ListenableFuture<Boolean>>() {})) {
+         } else if (rawReturnType.equals(boolean.class)
+                 || rawReturnType.equals(Boolean.class)
+                 || returnType.equals(new TypeToken<ListenableFuture<Boolean>>() {})) {
             return Key.get(ReturnTrueIf2xx.class);
-         } else if (rawReturnType.equals(InputStream.class) || returnType.equals(new TypeToken<ListenableFuture<InputStream>>() {})) {
+         } else if (rawReturnType.equals(InputStream.class)
+                 || returnType.equals(new TypeToken<ListenableFuture<InputStream>>() {})) {
             return Key.get(ReturnInputStream.class);
-         } else if (rawReturnType.equals(HttpResponse.class) || returnType.equals(new TypeToken<ListenableFuture<HttpResponse>>() {})) {
+         } else if (rawReturnType.equals(HttpResponse.class)
+                 || returnType.equals(new TypeToken<ListenableFuture<HttpResponse>>() {})) {
             return Key.get(Class.class.cast(IdentityFunction.class));
          } else if (acceptHeaders.contains(APPLICATION_JSON)) {
             return getJsonParserKeyForMethod(invoked);
          } else if (acceptHeaders.contains(APPLICATION_XML) || invoked.isAnnotationPresent(JAXBResponseParser.class)) {
             return getJAXBParserKeyForMethod(invoked);
-         } else if (rawReturnType.equals(String.class) || returnType.equals(new TypeToken<ListenableFuture<String>>() {})) {
+         } else if (rawReturnType.equals(String.class)
+                 || returnType.equals(new TypeToken<ListenableFuture<String>>() {})) {
             return Key.get(ReturnStringIf2xx.class);
-         } else if (rawReturnType.equals(URI.class) || returnType.equals(new TypeToken<ListenableFuture<URI>>() {})) {
+         } else if (rawReturnType.equals(URI.class)
+                 || returnType.equals(new TypeToken<ListenableFuture<URI>>() {})) {
             return Key.get(ParseURIFromListOrLocationHeaderIf20x.class);
          } else {
             throw new IllegalStateException("You must specify a ResponseParser annotation on: " + invoked.toString());

@@ -26,6 +26,7 @@ import org.jclouds.azureblob.blobstore.AzureBlobRequestSigner;
 import org.jclouds.azureblob.blobstore.AzureBlobStore;
 import org.jclouds.azureblob.domain.PublicAccess;
 import org.jclouds.blobstore.AsyncBlobStore;
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -37,7 +38,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
-public class AzureBlobStoreContextModule extends AbstractModule {
+public class AzureBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
    protected void configure() {

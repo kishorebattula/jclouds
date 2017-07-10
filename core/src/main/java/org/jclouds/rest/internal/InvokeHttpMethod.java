@@ -16,19 +16,15 @@
  */
 package org.jclouds.rest.internal;
 
-import static com.google.common.base.Objects.equal;
-import static com.google.common.base.Objects.toStringHelper;
-import static com.google.common.base.Throwables.propagate;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-
-import java.util.concurrent.Callable;
-
-import javax.annotation.Resource;
-import javax.inject.Inject;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.TimeLimiter;
 import org.jclouds.http.HttpCommand;
 import org.jclouds.http.HttpCommandExecutorService;
 import org.jclouds.http.HttpRequest;
@@ -39,12 +35,14 @@ import org.jclouds.rest.InvocationContext;
 import org.jclouds.rest.annotations.Async;
 import org.jclouds.rest.config.InvocationConfig;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.Futures;
+import javax.annotation.Resource;
+import javax.inject.Inject;
+import java.util.concurrent.Callable;
+
+import static com.google.common.base.Objects.equal;
+import static com.google.common.base.Objects.toStringHelper;
+import static com.google.common.base.Throwables.propagate;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class InvokeHttpMethod implements Function<Invocation, Object> {
 
@@ -79,7 +77,7 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
    }
 
    private ListenableFuture<Object> handleAsyncResponse(ListenableFuture<HttpResponse> future,
-        final Function<HttpResponse, ?> transformer, final org.jclouds.Fallback<?> fallback) {
+         final Function<HttpResponse, ?> transformer, final org.jclouds.Fallback<?> fallback) {
       final SettableFuture<Object> finalFuture = SettableFuture.create();
       Futures.addCallback(future, new FutureCallback<HttpResponse>() {
          @Override
@@ -122,7 +120,6 @@ public class InvokeHttpMethod implements Function<Invocation, Object> {
       final org.jclouds.Fallback<?> fallback = getFallback(commandName, invocation, command);
       logger.debug(">> invoking %s", commandName);
       try {
-         final SettableFuture<Object> future = SettableFuture.create();
          if (invocation.getInvokable().isAnnotationPresent(Async.class)) {
             return handleAsyncResponse(http.invokeAsync(command), transformer, fallback);
          } else {

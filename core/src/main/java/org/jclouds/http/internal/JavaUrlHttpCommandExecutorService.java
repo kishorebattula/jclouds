@@ -37,6 +37,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -62,6 +63,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingOutputStream;
 import com.google.inject.Inject;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Futures;
 
 @Singleton
 public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorService<HttpURLConnection> {
@@ -90,7 +92,8 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
    }
 
    @Override
-   protected HttpResponse invoke(HttpURLConnection connection) throws IOException, InterruptedException {
+   protected ListenableFuture<HttpResponse> invoke(HttpURLConnection connection)
+           throws IOException, InterruptedException, ExecutionException {
       HttpResponse.Builder<?> builder = HttpResponse.builder();
       InputStream in = null;
       try {
@@ -124,12 +127,13 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
          builder.payload(payload);
       }
       builder.headers(filterOutContentHeaders(headers));
-      return builder.build();
+      return Futures.immediateFuture(builder.build());
    }
 
    @Override
    protected ListenableFuture<HttpResponse> invokeAsync(final HttpURLConnection nativeRequest) {
-      throw new UnsupportedOperationException("unsupported operation");
+      throw new UnsupportedOperationException("Async calls are not supported. " +
+            "Please use ApacheHC or OkHttp driver");
    }
 
    @Override

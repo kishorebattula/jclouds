@@ -23,6 +23,7 @@ import javax.inject.Singleton;
 import org.jclouds.atmos.AtmosClient;
 import org.jclouds.atmos.blobstore.AtmosBlobRequestSigner;
 import org.jclouds.atmos.blobstore.AtmosBlobStore;
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -34,7 +35,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
-public class AtmosBlobStoreContextModule extends AbstractModule {
+public class AtmosBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
    protected void configure() {

@@ -16,11 +16,28 @@
  */
 package org.jclouds.http.internal;
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.getCurrentArguments;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
+import static org.jclouds.http.HttpUtils.closeClientButKeepContentStream;
+import static org.jclouds.http.HttpUtils.releasePayload;
+import static org.jclouds.io.Payloads.newInputStreamPayload;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.name.Names;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.jclouds.http.HttpCommand;
@@ -319,8 +336,13 @@ public class BaseHttpCommandExecutorServiceTest {
       }
 
       @Override
-      protected HttpResponse invoke(Object nativeRequest) throws IOException, InterruptedException {
-         return null;
+      protected ListenableFuture<HttpResponse> invoke(Object nativeRequest) throws IOException, InterruptedException {
+         return Futures.immediateFuture(null);
+      }
+
+      @Override
+      protected ListenableFuture<HttpResponse> invokeAsync(final Object nativeRequest) {
+         return Futures.immediateFuture(null);
       }
 
       @Override
