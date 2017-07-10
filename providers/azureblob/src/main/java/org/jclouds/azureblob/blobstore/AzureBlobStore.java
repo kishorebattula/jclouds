@@ -21,7 +21,6 @@ import static org.jclouds.azure.storage.options.ListOptions.Builder.includeMetad
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
