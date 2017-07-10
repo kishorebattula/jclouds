@@ -19,7 +19,9 @@ package org.jclouds.s3.blobstore.internal;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.google.common.base.Optional;
 import org.jclouds.Context;
+import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -38,8 +40,8 @@ public class S3BlobStoreContextImpl extends BlobStoreContextImpl implements S3Bl
    @Inject
    public S3BlobStoreContextImpl(@Provider Context backend, @Provider TypeToken<? extends Context> backendType,
          Utils utils, ConsistencyModel consistencyModel, BlobStore blobStore, BlobRequestSigner blobRequestSigner,
-         Injector injector) {
-      super(backend, backendType, utils, consistencyModel, blobStore, blobRequestSigner, injector);
+         Optional<AsyncBlobStore> asyncBlobStore) {
+      super(backend, backendType, utils, consistencyModel, blobStore, blobRequestSigner, asyncBlobStore);
    }
 
    @Override

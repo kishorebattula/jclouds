@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -40,7 +41,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 
-public class S3BlobStoreContextModule extends AbstractModule {
+public class S3BlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
    protected void configure() {

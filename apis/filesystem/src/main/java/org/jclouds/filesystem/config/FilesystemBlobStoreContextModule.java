@@ -18,6 +18,7 @@ package org.jclouds.filesystem.config;
 
 import static org.jclouds.filesystem.util.Utils.isWindows;
 
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.LocalBlobRequestSigner;
@@ -35,7 +36,7 @@ import org.jclouds.filesystem.util.internal.FileSystemBlobUtilsImpl;
 
 import com.google.inject.AbstractModule;
 
-public class FilesystemBlobStoreContextModule extends AbstractModule {
+public class FilesystemBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
    protected void configure() {

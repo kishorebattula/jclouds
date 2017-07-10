@@ -18,6 +18,7 @@ package org.jclouds.openstack.swift.v1.blobstore.config;
 
 import javax.inject.Inject;
 
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.BlobStoreContext;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -30,7 +31,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 
-public class SwiftBlobStoreContextModule extends AbstractModule {
+public class SwiftBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
    protected void configure() {

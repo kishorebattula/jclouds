@@ -16,6 +16,7 @@
  */
 package org.jclouds.googlecloudstorage.blobstore.config;
 
+import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
 import org.jclouds.blobstore.BlobRequestSigner;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
@@ -27,7 +28,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
-public class GoogleCloudStorageBlobStoreContextModule extends AbstractModule {
+public class GoogleCloudStorageBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
 
    @Override
    protected void configure() {

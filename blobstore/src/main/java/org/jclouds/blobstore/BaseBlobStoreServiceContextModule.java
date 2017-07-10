@@ -14,20 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jclouds.b2.blobstore.config;
 
-import org.jclouds.blobstore.BaseBlobStoreServiceContextModule;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.blobstore.attr.ConsistencyModel;
-import org.jclouds.b2.blobstore.B2BlobStore;
+package org.jclouds.blobstore;
 
+import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.inject.Binding;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
-public final class B2BlobStoreContextModule extends BaseBlobStoreServiceContextModule {
-   @Override
-   protected void configure() {
-      bind(ConsistencyModel.class).toInstance(ConsistencyModel.EVENTUAL);
-      bind(BlobStore.class).to(B2BlobStore.class).in(Scopes.SINGLETON);
-   }
+public abstract class BaseBlobStoreServiceContextModule extends AbstractModule {
+    @Provides
+    @Singleton
+    protected final Optional<AsyncBlobStore> provideAsyncBlobStore(Injector i) {
+        Binding<AsyncBlobStore> binding = i.getExistingBinding(Key.get(AsyncBlobStore.class));
+        return binding == null ? Optional.<AsyncBlobStore> absent() : Optional.of(binding.getProvider().get());
+    }
 }
