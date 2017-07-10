@@ -119,9 +119,9 @@ public class DynECTHttpApiModule extends HttpApiModule<DynECTApi> {
        * synchronized to prevent multiple callers from overlapping requests on the same session
        */
       @Override
-      protected synchronized ListenableFuture<HttpResponse> invoke(HttpURLConnection connection)
-              throws IOException, InterruptedException, ExecutionException {
-         HttpResponse response = super.invoke(connection).get();
+      protected synchronized HttpResponse invoke(HttpURLConnection connection)
+              throws IOException, InterruptedException {
+         HttpResponse response = super.invoke(connection);
          if (response.getStatusCode() == 200) {
             byte[] data = closeClientButKeepContentStream(response);
             String message = data != null ? new String(data, Charsets.UTF_8) : null;
@@ -129,7 +129,7 @@ public class DynECTHttpApiModule extends HttpApiModule<DynECTApi> {
                response = response.toBuilder().statusCode(400).build();
             }
          }
-         return Futures.immediateFuture(response);
+         return response;
       }
    }
 }

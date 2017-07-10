@@ -41,7 +41,6 @@ import com.google.appengine.api.urlfetch.HTTPResponse;
 import com.google.appengine.api.urlfetch.URLFetchService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Futures;
 
 /**
  * Google App Engine version of {@link HttpCommandExecutorService}
@@ -87,8 +86,8 @@ public class GaeHttpCommandExecutorService extends BaseHttpCommandExecutorServic
    }
 
    @Override
-   protected ListenableFuture<HttpResponse> invoke(HTTPRequest request) throws IOException {
-      return Futures.immediateFuture(convert(urlFetchService.fetch(request)));
+   protected HttpResponse invoke(HTTPRequest request) throws IOException {
+      return convert(urlFetchService.fetch(request));
    }
 
    @Override

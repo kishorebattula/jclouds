@@ -321,8 +321,8 @@ public class BaseHttpCommandExecutorServiceTest {
       }
 
       @Override
-      protected ListenableFuture<HttpResponse> invoke(Object nativeRequest) throws IOException, InterruptedException {
-         return Futures.immediateFuture(null);
+      protected HttpResponse invoke(Object nativeRequest) throws IOException, InterruptedException {
+         return null;
       }
 
       @Override

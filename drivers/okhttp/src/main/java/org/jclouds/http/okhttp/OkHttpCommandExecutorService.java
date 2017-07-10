@@ -153,12 +153,12 @@ public final class OkHttpCommandExecutorService extends BaseHttpCommandExecutorS
    }
 
    @Override
-   protected ListenableFuture<HttpResponse> invoke(Request nativeRequest) throws IOException, InterruptedException {
+   protected HttpResponse invoke(Request nativeRequest) throws IOException, InterruptedException {
       OkHttpClient requestScopedClient = globalClient.clone();
       requestScopedClient.setProxy(proxyForURI.apply(nativeRequest.uri()));
 
       Response response = requestScopedClient.newCall(nativeRequest).execute();
-      return Futures.immediateFuture(responseTransformer.apply(response));
+      return responseTransformer.apply(response);
    }
 
    @Override

@@ -63,7 +63,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingOutputStream;
 import com.google.inject.Inject;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Futures;
 
 @Singleton
 public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorService<HttpURLConnection> {
@@ -92,8 +91,8 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
    }
 
    @Override
-   protected ListenableFuture<HttpResponse> invoke(HttpURLConnection connection)
-           throws IOException, InterruptedException, ExecutionException {
+   protected HttpResponse invoke(HttpURLConnection connection)
+           throws IOException, InterruptedException {
       HttpResponse.Builder<?> builder = HttpResponse.builder();
       InputStream in = null;
       try {
@@ -127,7 +126,7 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
          builder.payload(payload);
       }
       builder.headers(filterOutContentHeaders(headers));
-      return Futures.immediateFuture(builder.build());
+      return builder.build();
    }
 
    @Override

@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URI;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 import javax.inject.Named;
@@ -50,8 +49,6 @@ import org.jclouds.profitbricks.domain.ServiceFault;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.io.ByteStreams;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 
 /**
@@ -81,9 +78,9 @@ public class ResponseStatusFromPayloadHttpCommandExecutorService extends JavaUrl
    }
 
    @Override
-   protected ListenableFuture<HttpResponse> invoke(HttpURLConnection connection)
-           throws IOException, InterruptedException, ExecutionException {
-      HttpResponse originalResponse = super.invoke(connection).get();
+   protected HttpResponse invoke(HttpURLConnection connection)
+           throws IOException, InterruptedException {
+      HttpResponse originalResponse = super.invoke(connection);
       HttpResponse.Builder<?> responseBuilder = originalResponse.toBuilder();
 
       if (hasServerError(originalResponse) && hasPayload(originalResponse)) {
@@ -125,7 +122,7 @@ public class ResponseStatusFromPayloadHttpCommandExecutorService extends JavaUrl
          }
       }
 
-      return Futures.immediateFuture(responseBuilder.build());
+      return responseBuilder.build();
    }
 
    private static boolean hasServerError(final HttpResponse response) {
