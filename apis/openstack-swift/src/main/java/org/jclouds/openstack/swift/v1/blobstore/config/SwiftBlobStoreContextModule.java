@@ -27,7 +27,6 @@ import org.jclouds.openstack.swift.v1.blobstore.RegionScopedSwiftBlobStore;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ForwardingObject;
-import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 

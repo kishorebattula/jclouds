@@ -24,8 +24,6 @@ import org.jclouds.blobstore.LocalStorageStrategy;
 import org.jclouds.blobstore.TransientStorageStrategy;
 import org.jclouds.blobstore.attr.ConsistencyModel;
 
-import com.google.inject.AbstractModule;
-
 public class TransientBlobStoreContextModule extends BaseBlobStoreServiceContextModule {
    @Override
    protected void configure() {

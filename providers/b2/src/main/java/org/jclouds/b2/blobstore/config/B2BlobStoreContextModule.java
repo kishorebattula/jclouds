@@ -21,7 +21,6 @@ import org.jclouds.blobstore.BlobStore;
 import org.jclouds.blobstore.attr.ConsistencyModel;
 import org.jclouds.b2.blobstore.B2BlobStore;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 public final class B2BlobStoreContextModule extends BaseBlobStoreServiceContextModule {

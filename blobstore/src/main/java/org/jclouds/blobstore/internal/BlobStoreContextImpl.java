@@ -22,9 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.google.common.base.Optional;
-import com.google.inject.Binding;
-import com.google.inject.Injector;
-import com.google.inject.Key;
 import org.jclouds.Context;
 import org.jclouds.blobstore.AsyncBlobStore;
 import org.jclouds.blobstore.BlobRequestSigner;

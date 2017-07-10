@@ -38,8 +38,27 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.inject.AbstractModule;
+import com.google.inject.Binder;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.TypeLiteral;
 import org.custommonkey.xmlunit.Diff;
 import org.custommonkey.xmlunit.Difference;
 import org.custommonkey.xmlunit.DifferenceConstants;
@@ -72,27 +91,6 @@ import org.jclouds.rest.HttpApiMetadata;
 import org.jclouds.rest.config.CredentialStoreModule;
 import org.jclouds.util.Strings2;
 import org.w3c.dom.Node;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.util.concurrent.MoreExecutors.sameThreadExecutor;
-import static com.google.inject.name.Names.named;
-import static org.jclouds.Constants.PROPERTY_IDEMPOTENT_METHODS;
-import static org.jclouds.Constants.PROPERTY_MAX_RETRIES;
-import static org.jclouds.Constants.PROPERTY_USER_THREADS;
-import static org.testng.Assert.assertEquals;
 
 /**
  * 
@@ -220,13 +218,6 @@ public abstract class BaseRestApiExpectTest<S> {
       @Override
       protected ListenableFuture<HttpResponse> invokeAsync(final HttpRequest nativeRequest) {
          return Futures.immediateFuture(fn.apply(nativeRequest));
-      }
-
-      @Override
-      protected ListenableFuture<HttpResponse> invokeAsync(HttpRequest nativeRequest) {
-         SettableFuture<HttpResponse> future = SettableFuture.create();
-         future.set(fn.apply(nativeRequest));
-         return future;
       }
    }
 

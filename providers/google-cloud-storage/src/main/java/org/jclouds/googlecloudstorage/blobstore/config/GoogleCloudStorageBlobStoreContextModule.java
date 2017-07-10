@@ -24,7 +24,6 @@ import org.jclouds.date.TimeStamp;
 import org.jclouds.googlecloudstorage.blobstore.GoogleCloudStorageBlobRequestSigner;
 import org.jclouds.googlecloudstorage.blobstore.GoogleCloudStorageBlobStore;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
