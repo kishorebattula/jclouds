@@ -212,8 +212,8 @@ public abstract class BaseRestApiExpectTest<S> {
       }
 
       @Override
-      public HttpResponse invoke(HttpRequest nativeRequest) throws IOException, InterruptedException {
-         return fn.apply(nativeRequest);
+      public ListenableFuture<HttpResponse> invoke(HttpRequest nativeRequest) throws IOException, InterruptedException {
+         return Futures.immediateFuture(fn.apply(nativeRequest));
       }
 
       @Override
